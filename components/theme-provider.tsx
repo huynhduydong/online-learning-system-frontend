@@ -6,6 +6,14 @@ import {
   type ThemeProviderProps,
 } from 'next-themes'
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+interface ExtendedThemeProviderProps extends ThemeProviderProps {
+  suppressHydrationWarning?: boolean
+}
+
+export function ThemeProvider({ children, ...props }: ExtendedThemeProviderProps) {
+  return (
+    <NextThemesProvider {...props}>
+      {children}
+    </NextThemesProvider>
+  )
 }

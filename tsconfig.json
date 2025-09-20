@@ -27,13 +27,13 @@
         "./*"
       ],
       "@/components/*": [
-        "./src/components/*"
+        "./components/*"
       ],
       "@/lib/*": [
-        "./src/lib/*"
+        "./lib/*"
       ],
       "@/hooks/*": [
-        "./src/hooks/*"
+        "./hooks/*"
       ],
       "@/stores/*": [
         "./src/stores/*"

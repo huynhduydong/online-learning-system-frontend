@@ -10,6 +10,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { AppHeader } from "@/components/app-header"
+import { AppContainer } from "@/components/app-container"
+import { AppFooter } from "@/components/app-footer"
 
 export default function HomePage() {
   const scrollToTop = () => {
@@ -71,31 +74,18 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
-      <header className="glass-effect border-b border-border/50 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3 animate-fade-in">
-            <div className="relative">
-              <BookOpen className="h-8 w-8 text-gradient" />
-              <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1 animate-bounce-soft" />
-            </div>
-            <span className="text-2xl font-bold text-gradient">EduPlatform</span>
-          </div>
-          <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium">Khóa học</a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium">Giảng viên</a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 font-medium">Về chúng tôi</a>
-            <Button variant="outline" className="border-gradient hover:shadow-glow transition-all duration-300">
-              Đăng nhập
-            </Button>
-            <Button className="bg-gradient-primary hover:shadow-glow transition-all duration-300 shadow-soft">
-              Đăng ký
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <AppHeader 
+        navItems={[
+          { title: "Khóa học", href: "/courses" },
+          { title: "Giảng viên", href: "/instructors" },
+          { title: "Về chúng tôi", href: "/about" }
+        ]}
+        showSearch={true}
+        showNotifications={true}
+      />
 
       {/* Sticky Navigation Bar */}
-      <nav className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-background/95 backdrop-blur-md border border-border/50 rounded-full px-6 py-3 shadow-lg opacity-0 translate-y-[-20px] transition-all duration-300 hover:shadow-xl" id="sticky-nav">
+      <nav className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-background/95 backdrop-blur-md border border-border/50 rounded-full px-6 py-3 shadow-lg opacity-0 translate-y-[-20px] transition-all duration-300 hover:shadow-xl" id="sticky-nav" aria-label="Điều hướng trang">
         <div className="flex items-center space-x-6">
           <a href="#hero" className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors group">
             <Home className="h-4 w-4 group-hover:scale-110 transition-transform" />
@@ -137,8 +127,10 @@ export default function HomePage() {
         <ChevronUp className="h-6 w-6 text-white group-hover:animate-bounce" />
       </button>
 
-      {/* Hero Section */}
-      <section id="hero" className="py-20 px-4 relative overflow-hidden">
+      {/* Main Content */}
+      <main id="main-content">
+        {/* Hero Section */}
+        <section id="hero" className="py-20 px-4 relative overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-primary opacity-10 rounded-full blur-3xl animate-bounce-soft"></div>
@@ -1315,90 +1307,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
-      <footer className="relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-muted/80 via-background to-muted/60"></div>
-        <div className="absolute inset-0 bg-gradient-primary opacity-5"></div>
-        
-        <div className="relative border-t border-border/50 py-16">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-4 gap-8 mb-12">
-              <div className="md:col-span-1">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="relative">
-                    <BookOpen className="h-8 w-8 text-gradient" />
-                    <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
-                  </div>
-                  <span className="text-xl font-bold text-gradient">EduPlatform</span>
-                </div>
-                <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Nền tảng học tập trực tuyến thế hệ mới, mang đến trải nghiệm học tập đỉnh cao với công nghệ AI tiên tiến.
-                </p>
-                <div className="flex space-x-4">
-                  <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center hover:shadow-glow transition-all duration-300 cursor-pointer">
-                    <span className="text-white font-bold text-sm">f</span>
-                  </div>
-                  <div className="w-10 h-10 bg-gradient-to-r from-secondary to-accent rounded-full flex items-center justify-center hover:shadow-glow transition-all duration-300 cursor-pointer">
-                    <span className="text-white font-bold text-sm">Y</span>
-                  </div>
-                  <div className="w-10 h-10 bg-gradient-to-r from-accent to-primary rounded-full flex items-center justify-center hover:shadow-glow transition-all duration-300 cursor-pointer">
-                    <span className="text-white font-bold text-sm">in</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-bold mb-6 text-lg">Khóa học hot</h4>
-                <ul className="space-y-3">
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">🚀 Lập trình AI</a></li>
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">🎨 UI/UX Design</a></li>
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">📱 Mobile Development</a></li>
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">💼 Digital Marketing</a></li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold mb-6 text-lg">Hỗ trợ 24/7</h4>
-                <ul className="space-y-3">
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">💬 Trung tâm trợ giúp</a></li>
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">📞 Liên hệ hotline</a></li>
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">❓ FAQ</a></li>
-                  <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors duration-300 hover:translate-x-1 transform inline-block">📋 Chính sách</a></li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-bold mb-6 text-lg">Nhận thông báo mới</h4>
-                <p className="text-muted-foreground mb-4 text-sm">
-                  Đăng ký để nhận thông tin về khóa học mới và ưu đãi đặc biệt
-                </p>
-                <div className="flex gap-2">
-                  <input 
-                    type="email" 
-                    placeholder="Email của bạn" 
-                    className="flex-1 px-3 py-2 bg-background/50 border border-border/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-                  />
-                  <Button size="sm" className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border-t border-border/50 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-muted-foreground text-sm">
-                &copy; 2024 EduPlatform. Tất cả quyền được bảo lưu.
-              </p>
-              <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                <a href="#" className="hover:text-primary transition-colors">Điều khoản</a>
-                <a href="#" className="hover:text-primary transition-colors">Bảo mật</a>
-                <a href="#" className="hover:text-primary transition-colors">Cookie</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   )
 }
