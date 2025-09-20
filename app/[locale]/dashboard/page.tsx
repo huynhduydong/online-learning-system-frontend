@@ -390,7 +390,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.completedCourses || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats?.totalCourses && stats?.completedCourses 
+                  {stats?.totalCourses > 0 && stats?.completedCourses
                     ? Math.round((stats.completedCourses / stats.totalCourses) * 100)
                     : 0}% tỷ lệ hoàn thành
                 </p>
