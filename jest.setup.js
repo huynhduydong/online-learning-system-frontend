@@ -1,8 +1,6 @@
-"use client"
+
 
 import "@testing-library/jest-dom"
-import jest from "jest"
-
 // Mock next/navigation
 jest.mock("next/navigation", () => ({
   useRouter() {
