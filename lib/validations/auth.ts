@@ -16,28 +16,28 @@ const emailSchema = z
 // Password validation based on config
 const passwordSchema = z
   .string()
-  .min(config.validation.password.minLength, `Password must be at least ${config.validation.password.minLength} characters`)
-  .max(128, 'Password must be less than 128 characters')
+  .min(config.validation.password.minLength, `Mật khẩu phải có ít nhất ${config.validation.password.minLength} ký tự`)
+  .max(128, 'Mật khẩu phải ít hơn 128 ký tự')
   .refine(
     (password) => {
       if (!config.validation.password.requireUppercase) return true
       return /[A-Z]/.test(password)
     },
-    'Password must contain at least one uppercase letter'
+    'Mật khẩu phải chứa ít nhất một chữ cái viết hoa'
   )
   .refine(
     (password) => {
       if (!config.validation.password.requireLowercase) return true
       return /[a-z]/.test(password)
     },
-    'Password must contain at least one lowercase letter'
+    'Mật khẩu phải chứa ít nhất một chữ cái viết thường'
   )
   .refine(
     (password) => {
       if (!config.validation.password.requireNumber) return true
       return /\d/.test(password)
     },
-    'Password must contain at least one number'
+    'Mật khẩu phải chứa ít nhất một số'
   )
 
 // Name validation
