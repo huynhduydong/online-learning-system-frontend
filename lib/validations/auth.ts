@@ -44,7 +44,7 @@ const passwordSchema = z
 const nameSchema = z
   .string()
   .min(config.validation.name.minLength, `Name must be at least ${config.validation.name.minLength} characters`)
-  .max(50, 'Name must be less than 50 characters')
+  .max(50, 'Tên phải ít hơn 50 ký tự')
   .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes')
 
 // Login form schema
