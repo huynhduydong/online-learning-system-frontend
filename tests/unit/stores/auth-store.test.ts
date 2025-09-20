@@ -1,7 +1,5 @@
 import { renderHook, act } from "@testing-library/react"
 import { useAuthStore } from "@/stores/auth-store"
-import jest from "jest" // Declare the jest variable
-
 // Mock fetch
 global.fetch = jest.fn()
 
