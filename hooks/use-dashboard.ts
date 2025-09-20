@@ -169,14 +169,14 @@ export function useDashboard(): UseDashboardReturn {
       
       // Add new achievements if any
       if (result.newAchievements && result.newAchievements.length > 0) {
-        setAchievements(prev => [...result.newAchievements!, ...prev])
+        setAchievements(prev => [ ...(result.newAchievements ?? []), ...prev ])
         
         // Update dashboard data
         if (dashboardData) {
           setDashboardData(prev => prev ? {
             ...prev,
             stats: { ...prev.stats, currentStreak: result.currentStreak },
-            achievements: [...result.newAchievements!, ...prev.achievements]
+            achievements: [ ...(result.newAchievements ?? []), ...prev.achievements ]
           } : null)
         }
       }
