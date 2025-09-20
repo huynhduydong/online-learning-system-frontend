@@ -230,7 +230,6 @@
     --focus-ring-color: hsl(var(--primary));
     --focus-ring-opacity: 0.5;
   }
-    --gradient-end: 351 95% 81%;
     
     --success: 142 76% 46%;
     --success-foreground: 0 0% 98%;
