@@ -29,18 +29,7 @@ export function SkipLink({ href, children, className }: SkipLinkProps) {
         "transform-gpu",
         className
       )}
-      onFocus={(e) => {
-        // Ensure the link is visible when focused
-        e.currentTarget.style.opacity = "1"
-        e.currentTarget.style.transform = "translateY(0)"
-        e.currentTarget.style.pointerEvents = "auto"
-      }}
-      onBlur={(e) => {
-        // Hide the link when focus is lost
-        e.currentTarget.style.opacity = "0"
-        e.currentTarget.style.transform = "translateY(-0.5rem)"
-        e.currentTarget.style.pointerEvents = "none"
-      }}
+      
     >
       {children}
     </a>
