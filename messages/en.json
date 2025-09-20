@@ -1,0 +1,67 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "loginSuccess": "Login successful",
+    "loginError": "Login failed",
+    "registerSuccess": "Registration successful",
+    "registerError": "Registration failed"
+  },
+  "courses": {
+    "title": "Courses",
+    "allCourses": "All Courses",
+    "myCourses": "My Courses",
+    "enrolledCourses": "Enrolled Courses",
+    "createCourse": "Create Course",
+    "editCourse": "Edit Course",
+    "courseDetails": "Course Details",
+    "enroll": "Enroll",
+    "enrolled": "Enrolled",
+    "startLearning": "Start Learning",
+    "continueLearning": "Continue Learning",
+    "instructor": "Instructor",
+    "duration": "Duration",
+    "level": "Level",
+    "category": "Category",
+    "rating": "Rating",
+    "students": "Students",
+    "lessons": "Lessons",
+    "price": "Price",
+    "free": "Free"
+  },
+  "lessons": {
+    "title": "Lessons",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "notStarted": "Not Started",
+    "markComplete": "Mark Complete",
+    "nextLesson": "Next Lesson",
+    "previousLesson": "Previous Lesson"
+  },
+  "navigation": {
+    "home": "Home",
+    "courses": "Courses",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "help": "Help"
+  }
+}
