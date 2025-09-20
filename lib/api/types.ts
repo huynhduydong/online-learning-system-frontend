@@ -36,6 +36,24 @@ export interface LoginRequest {
   remember_me?: boolean
 }
 
+// API Login Response (new structure)
+export interface ApiLoginResponse {
+  success: boolean
+  message: string
+  data: {
+    access_token: string
+    refresh_token: string
+    user: {
+      id: number
+      email: string
+      full_name: string
+      avatar_url: string | null
+      role: 'student' | 'instructor'
+    }
+  }
+}
+
+// Internal LoginResponse (for backward compatibility)
 export interface LoginResponse {
   success: true
   message: string

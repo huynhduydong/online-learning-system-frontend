@@ -8,6 +8,7 @@ import { endpoints } from '@/lib/config'
 import type {
   LoginRequest,
   LoginResponse,
+  ApiLoginResponse,
   RegisterRequest,
   RegisterResponse,
   RefreshTokenResponse,
@@ -60,32 +61,50 @@ export class AuthService {
    */
   async login(data: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await apiClient.post<LoginResponse>(
+      const response = await apiClient.post<ApiLoginResponse>(
         endpoints.auth.login,
         data
       )
 
-      // Backend returns data directly, not wrapped in ApiResponse format
-      if (response.success) {
-        // Store tokens and user data
-        tokenManager.setToken(response.access_token)
-        tokenManager.setRefreshToken(response.refresh_token)
-        tokenManager.setUser(response.user)
+      // Backend returns data wrapped in ApiResponse format
+      if (response.success && response.data) {
+        // Map API user to internal User format
+        const apiUser = response.data.user
+        const user: User = {
+          id: apiUser.id,
+          email: apiUser.email,
+          first_name: apiUser.full_name.split(' ')[0] || '',
+          last_name: apiUser.full_name.split(' ').slice(1).join(' ') || '',
+          full_name: apiUser.full_name,
+          role: apiUser.role,
+          is_active: true, // Default values for missing fields
+          is_verified: true,
+          profile_image: apiUser.avatar_url,
+          created_at: new Date().toISOString(),
+          confirmed_at: new Date().toISOString(),
+          last_login_at: new Date().toISOString(),
+          last_activity_at: new Date().toISOString()
+        }
 
-        // Return the actual data, not the wrapper response
+        // Store tokens and user data
+        tokenManager.setToken(response.data.access_token)
+        tokenManager.setRefreshToken(response.data.refresh_token)
+        tokenManager.setUser(user)
+
+        // Return the internal format for backward compatibility
         return {
-          success: response.success,
+          success: true,
           message: response.message,
-          user: response.user,
-          access_token: response.access_token,
-          refresh_token: response.refresh_token,
-          expires_in: response.expires_in,
-          remember_me: response.remember_me
+          user: user,
+          access_token: response.data.access_token,
+          refresh_token: response.data.refresh_token,
+          expires_in: 86400, // Default 24 hours
+          remember_me: data.remember_me || false
         }
       }
 
       // Use the specific error message from backend, fallback to generic message
-      throw new Error(response.error || 'Đăng nhập thất bại')
+      throw new Error('Đăng nhập thất bại')
     } catch (error) {
       if (error instanceof ApiClientError) {
         // Extract error message from API response
