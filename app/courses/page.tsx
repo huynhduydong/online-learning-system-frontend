@@ -5,7 +5,8 @@ import { Search, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useCourses } from "@/src/hooks/use-courses"
-import { CourseCard, CourseCardProps } from "@/components/course-card"
+import { CourseCard } from "@/components/course-card"
+import { Course } from "@/lib/api/types"
 import { CourseFilters, CourseFiltersProps } from "@/components/course-filters"
 import { CourseSorting, SortOption } from "@/components/course-sorting"
 import { CourseGrid } from "@/components/course-grid"
@@ -76,42 +77,27 @@ export default function CoursesPage() {
 
   const { data: coursesData, isLoading, error } = useCourses(apiParams)
 
-  // Convert courses to CourseCard format
-  const courseCards: CourseCardProps[] = useMemo(() => {
-    return coursesData?.courses?.map(course => ({
-      id: course.id.toString(),
-      title: course.title,
-      description: course.short_description,
-      instructor: course.instructor.name,
-      thumbnail: course.thumbnail_url,
-      price: course.price.amount,
-      originalPrice: course.price.original_price,
-      duration: course.stats.duration_hours * 60, // Convert hours to minutes
-      level: course.difficulty_level,
-      category: course.category.name,
-      rating: course.rating.average || 0,
-      reviewCount: course.rating.total_ratings,
-      studentsCount: course.stats.total_enrollments,
-      isFree: course.price.is_free,
-    })) || []
+  // Use courses directly
+  const courses: Course[] = useMemo(() => {
+    return coursesData?.courses || []
   }, [coursesData])
 
   // Filter courses by search term (client-side for search)
   const filteredAndSortedCourses = useMemo(() => {
-    let filtered = courseCards
+    let filtered = courses
 
     // Apply search filter on client side for better UX
     if (searchQuery) {
       filtered = filtered.filter(course => {
         const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             course.instructor.toLowerCase().includes(searchQuery.toLowerCase())
+                             course.short_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             course.instructor.name.toLowerCase().includes(searchQuery.toLowerCase())
         return matchesSearch
       })
     }
 
     return filtered
-  }, [courseCards, searchQuery])
+  }, [courses, searchQuery])
 
   // Pagination from API
   const totalPages = coursesData?.pagination?.total_pages || 1

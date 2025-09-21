@@ -1,0 +1,51 @@
+{
+    "data": {
+        "data": [
+            {
+                "description": "Các khóa học về lập trình và phát triển phần mềm",
+                "icon": "code",
+                "id": 1,
+                "name": "Lập trình",
+                "slug": "lap-trinh"
+            },
+            {
+                "description": "Các khóa học về thiết kế đồ họa và UI/UX",
+                "icon": "design",
+                "id": 2,
+                "name": "Thiết kế",
+                "slug": "thiet-ke"
+            },
+            {
+                "description": "Các khóa học về marketing và kinh doanh",
+                "icon": "marketing",
+                "id": 3,
+                "name": "Marketing",
+                "slug": "marketing"
+            },
+            {
+                "description": "Các khóa học ngoại ngữ",
+                "icon": "language",
+                "id": 4,
+                "name": "Ngoại ngữ",
+                "slug": "ngoai-ngu"
+            },
+            {
+                "description": "Các khóa học về quản lý và kinh doanh",
+                "icon": "business",
+                "id": 5,
+                "name": "Kinh doanh",
+                "slug": "kinh-doanh"
+            },
+            {
+                "description": "Các khóa học về công nghệ mới",
+                "icon": "technology",
+                "id": 6,
+                "name": "Công nghệ",
+                "slug": "cong-nghe"
+            }
+        ],
+        "success": true
+    },
+    "message": "Categories retrieved successfully",
+    "success": true
+}

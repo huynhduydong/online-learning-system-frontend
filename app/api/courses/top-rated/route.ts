@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { 
-  ApiTopRatedCoursesResponse, 
+import {
+  ApiTopRatedCoursesResponse,
   TopRatedCoursesQueryParams,
-  Course 
+  Course
 } from '@/lib/api/types'
 
 // Mock top-rated courses data - sorted by rating
@@ -221,7 +221,7 @@ const mockTopRatedCourses: Course[] = [
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    
+
     // Parse query parameters
     const queryParams: TopRatedCoursesQueryParams = {
       limit: parseInt(searchParams.get('limit') || '10'),
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
     if (queryParams.limit > 50) {
       queryParams.limit = 50
     }
-    
+
     if (queryParams.rating && (queryParams.rating < 0 || queryParams.rating > 5)) {
       queryParams.rating = undefined
     }
@@ -246,7 +246,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by category
     if (queryParams.category) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.category.slug === queryParams.category
       )
     }
@@ -258,28 +258,28 @@ export async function GET(request: NextRequest) {
         'intermediate': 'Trung bình',
         'advanced': 'Nâng cao'
       }
-      
-      filteredCourses = filteredCourses.filter(course => 
+
+      filteredCourses = filteredCourses.filter(course =>
         course.stats.level === difficultyMap[queryParams.difficulty!]
       )
     }
 
     // Filter by price range
     if (queryParams.min_price !== undefined) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.price.current_price >= queryParams.min_price!
       )
     }
 
     if (queryParams.max_price !== undefined) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.price.current_price <= queryParams.max_price!
       )
     }
 
     // Filter by minimum rating
     if (queryParams.rating !== undefined) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.rating.average >= queryParams.rating!
       )
     }
@@ -289,7 +289,7 @@ export async function GET(request: NextRequest) {
       if (b.rating.average !== a.rating.average) {
         return b.rating.average - a.rating.average
       }
-      return b.rating.count - a.rating.count
+      return (b.rating.count || b.rating.total_ratings || 0) - (a.rating.count || a.rating.total_ratings || 0)
     })
 
     // Limit results
@@ -315,7 +315,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Top-rated courses API error:', error)
-    
+
     return NextResponse.json({
       success: false,
       message: "Có lỗi xảy ra khi tải danh sách khóa học được đánh giá cao",

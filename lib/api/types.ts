@@ -166,30 +166,40 @@ export interface CourseCategory {
 export interface CourseInstructor {
   id: number
   name: string
+  email?: string
   full_name?: string
   bio?: string
   avatar_url?: string | null
+  avatar?: string
   total_students?: number
   total_courses?: number
 }
 
 export interface CoursePrice {
-  amount: number
-  display: string
-  is_free: boolean
+  /**
+   * The current price of the course (use current_price).
+   * 'amount' is deprecated; use 'current_price' instead.
+   */
+  current_price?: number
   original_price?: number
+  display?: string
+  is_free?: boolean
 }
 
 export interface CourseRating {
   average: number | null
-  has_enough_ratings: boolean
-  total_ratings: number
+  count?: number
+  total_ratings?: number
+  has_enough_ratings?: boolean
 }
 
 export interface CourseStats {
-  duration_hours: number
-  total_enrollments: number
-  total_lessons: number
+  duration_hours?: number
+  students_count?: number
+  lessons_count?: number
+  total_enrollments?: number
+  total_lessons?: number
+  level?: string
 }
 
 // Course Module/Lesson Structure
@@ -227,11 +237,12 @@ export interface CourseDetails extends Course {
   total_students?: number
   total_reviews?: number
   last_updated?: string
-  preview_video_url?: string
+  preview_video_url?: string | null
   is_free?: boolean
   requirements?: string[]
   what_you_will_learn?: string[]
   modules?: CourseModule[]
+  tags?: string[] | null
   created_at?: string
   updated_at?: string
 }
@@ -420,6 +431,16 @@ export interface ApiCourseResponse {
   data: CourseDetails
 }
 
+// New API Course Detail Response (with nested data structure)
+export interface ApiCourseDetailResponse {
+  success: boolean
+  message: string
+  data: {
+    data: CourseDetails
+    success: boolean
+  }
+}
+
 export interface ApiSearchCoursesResponse {
   success: boolean
   message: string
@@ -546,6 +567,7 @@ export interface ApiCategoriesWithCountResponse {
   data: {
     categories: CategoryWithCount[]
     total_count: number
+    total_courses?: number
   }
 }
 

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { 
-  ApiFreeCoursesResponse, 
+import {
+  ApiFreeCoursesResponse,
   FreeCoursesQueryParams,
   Course,
-  CoursePagination 
+  CoursePagination
 } from '@/lib/api/types'
 
 // Mock free courses data
@@ -183,7 +183,7 @@ const mockFreeCourses: Course[] = [
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    
+
     // Parse query parameters
     const queryParams: FreeCoursesQueryParams = {
       page: parseInt(searchParams.get('page') || '1'),
@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by category
     if (queryParams.category) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.category.slug === queryParams.category
       )
     }
@@ -218,29 +218,29 @@ export async function GET(request: NextRequest) {
         'intermediate': 'Trung bình',
         'advanced': 'Nâng cao'
       }
-      
+
       const targetDifficulty = difficultyMap[queryParams.difficulty] || queryParams.difficulty
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.stats.level === targetDifficulty
       )
     }
 
     // Filter by price range (for free courses, this mainly affects courses with price 0)
     if (queryParams.min_price !== undefined && queryParams.min_price > 0) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.price.current_price >= queryParams.min_price!
       )
     }
 
     if (queryParams.max_price !== undefined && queryParams.max_price > 0) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.price.current_price <= queryParams.max_price!
       )
     }
 
     // Filter by minimum rating
     if (queryParams.rating !== undefined && queryParams.rating > 0) {
-      filteredCourses = filteredCourses.filter(course => 
+      filteredCourses = filteredCourses.filter(course =>
         course.rating.average >= queryParams.rating!
       )
     }
@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
           if (b.rating.average !== a.rating.average) {
             return b.rating.average - a.rating.average
           }
-          return b.rating.count - a.rating.count
+          return (b.rating.count || b.rating.total_ratings || 0) - (a.rating.count || a.rating.total_ratings || 0)
         })
         break
       default:
@@ -304,7 +304,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Free courses API error:', error)
-    
+
     return NextResponse.json({
       success: false,
       message: "Có lỗi xảy ra khi tải danh sách khóa học miễn phí",

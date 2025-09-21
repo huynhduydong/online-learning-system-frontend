@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { AppContainer } from "./app-container"
 import { ThemeToggle } from "./theme-toggle"
+import { CourseCategoriesNav } from "./course-categories-nav"
 
 interface NavItem {
   title: string
@@ -53,11 +54,6 @@ const defaultNavItems: NavItem[] = [
     title: "Trang chủ",
     href: "/",
     description: "Trang chủ của hệ thống"
-  },
-  {
-    title: "Khóa học",
-    href: "/courses",
-    description: "Danh sách các khóa học"
   },
   {
     title: "Giảng viên",
@@ -91,7 +87,7 @@ export function AppHeader({
   }
 
   return (
-    <header 
+    <header
       className={cn(
         "sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
         className
@@ -102,7 +98,7 @@ export function AppHeader({
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link 
+            <Link
               href="/"
               className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
               aria-label="Về trang chủ"
@@ -118,6 +114,7 @@ export function AppHeader({
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Menu điều hướng chính">
+            <CourseCategoriesNav />
             {finalNavItems.map((item) => (
               <Link
                 key={item.href}
@@ -195,8 +192,8 @@ export function AppHeader({
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 {notificationCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
                   >
                     {notificationCount > 99 ? "99+" : notificationCount}
@@ -271,6 +268,9 @@ export function AppHeader({
                   </SheetDescription>
                 </SheetHeader>
                 <nav className="flex flex-col space-y-4 mt-6" role="navigation" aria-label="Menu điều hướng di động">
+                  <div className="px-2 py-1">
+                    <CourseCategoriesNav className="w-full" isMobile={true} />
+                  </div>
                   {finalNavItems.map((item) => (
                     <Link
                       key={item.href}
