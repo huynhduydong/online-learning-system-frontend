@@ -346,7 +346,7 @@ export default function EditCoursePage() {
               </Badge>
               {course.status === 'published' && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/courses/${courseId}`}>
+                  <Link href={`/courses/${course.slug}`}>
                     <Eye className="mr-2 h-4 w-4" />
                     View Live
                   </Link>
