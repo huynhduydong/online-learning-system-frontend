@@ -10,9 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AppHeader } from "@/components/app-header"
 import { AppContainer } from "@/components/app-container"
-import { AppFooter } from "@/components/app-footer"
 
 export default function HomePage() {
   const scrollToTop = () => {
@@ -73,16 +71,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      {/* Header */}
-      <AppHeader 
-        navItems={[
-          { title: "Khóa học", href: "/courses" },
-          { title: "Giảng viên", href: "/instructors" },
-          { title: "Về chúng tôi", href: "/about" }
-        ]}
-        showSearch={true}
-        showNotifications={true}
-      />
 
       {/* Sticky Navigation Bar */}
       <nav className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-background/95 backdrop-blur-md border border-border/50 rounded-full px-6 py-3 shadow-lg opacity-0 translate-y-[-20px] transition-all duration-300 hover:shadow-xl" id="sticky-nav" aria-label="Điều hướng trang">
@@ -1308,9 +1296,6 @@ export default function HomePage() {
       </section>
 
       </main>
-
-      {/* Footer */}
-      <AppFooter />
     </div>
   )
 }

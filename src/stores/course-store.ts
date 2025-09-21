@@ -11,11 +11,14 @@ export interface Course {
   }
   thumbnail: string
   price: number
+  originalPrice?: number
   duration: number // in minutes
   level: "beginner" | "intermediate" | "advanced"
   category: string
   rating: number
+  reviewCount?: number
   studentsCount: number
+  tags?: string[]
   lessons: Lesson[]
   createdAt: string
   updatedAt: string

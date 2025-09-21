@@ -6,7 +6,7 @@ import { Play, Clock, Users, Star, BookOpen, CheckCircle, PlayCircle, Award, Glo
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { useCourse, useEnrollCourse } from "@/hooks/use-courses"
+import { useCourse, useEnrollCourse } from "@/src/hooks/use-courses"
 import { formatCurrency, formatDuration } from "@/lib/utils"
 
 export default function CourseDetailPage() {

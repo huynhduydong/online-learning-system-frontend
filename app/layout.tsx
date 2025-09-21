@@ -2,8 +2,10 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+import { Providers } from "./providers"
 import { SkipLinksContainer, SkipToMainContent, SkipToNavigation, SkipToSearch } from "@/components/skip-link"
+import { AppHeader } from "@/components/app-header"
+import { AppFooter } from "@/components/app-footer"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,19 +31,20 @@ export default function RootLayout({
   return (
     <html className={`${inter.variable} ${jetbrainsMono.variable}`} lang="vi" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <Providers>
           <SkipLinksContainer>
             <SkipToMainContent />
             <SkipToNavigation />
             <SkipToSearch />
           </SkipLinksContainer>
-          {children}
-        </ThemeProvider>
+          <div className="flex min-h-screen flex-col">
+            <AppHeader />
+            <main className="flex-1" id="main-content">
+              {children}
+            </main>
+            <AppFooter />
+          </div>
+        </Providers>
       </body>
     </html>
   )

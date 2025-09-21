@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { Search, Menu, User, Bell, Settings, LogOut } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -72,7 +73,7 @@ const defaultNavItems: NavItem[] = [
 
 export function AppHeader({
   className,
-  navItems = defaultNavItems,
+  navItems,
   user,
   onSearch,
   showSearch = true,
@@ -81,6 +82,8 @@ export function AppHeader({
 }: AppHeaderProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isSearchFocused, setIsSearchFocused] = React.useState(false)
+
+  const finalNavItems = navItems || defaultNavItems
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,7 +105,7 @@ export function AppHeader({
             <Link 
               href="/"
               className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
-              aria-label="Trang chủ"
+              aria-label="Về trang chủ"
             >
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">EL</span>
@@ -114,8 +117,8 @@ export function AppHeader({
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Điều hướng chính">
-            {navItems.map((item) => (
+          <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Menu điều hướng chính">
+            {finalNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -172,7 +175,7 @@ export function AppHeader({
                       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         type="search"
-                        placeholder="Tìm kiếm..."
+                        placeholder="Nhập từ khóa tìm kiếm..."
                         className="pl-10"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -257,18 +260,18 @@ export function AppHeader({
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only">Menu</span>
+                  <span className="sr-only">Mở menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle>Menu</SheetTitle>
                   <SheetDescription>
-                    Điều hướng và tùy chọn
+                    Điều hướng trang web
                   </SheetDescription>
                 </SheetHeader>
-                <nav className="flex flex-col space-y-4 mt-6" role="navigation" aria-label="Menu di động">
-                  {navItems.map((item) => (
+                <nav className="flex flex-col space-y-4 mt-6" role="navigation" aria-label="Menu điều hướng di động">
+                  {finalNavItems.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
