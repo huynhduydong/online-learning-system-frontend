@@ -64,9 +64,7 @@ export function CourseCard({
   variant = 'vertical',
   onEnroll
 }: CourseCardNewProps) {
-  // Tạm thời disable safe course hook để debug
-  // const course = useSafeCourse(rawCourse)
-  const course = rawCourse
+  const course = useSafeCourse(rawCourse)
   
   // Guard clause - nếu course không tồn tại thì return null
   if (!course) {
