@@ -8,7 +8,6 @@ import { endpoints } from '@/lib/config'
 import type {
   LoginRequest,
   LoginResponse,
-  ApiLoginResponse,
   RegisterRequest,
   RegisterResponse,
   RefreshTokenResponse,
@@ -29,18 +28,18 @@ export class AuthService {
         data
       )
 
-      if (response.success) {
+      if (response.success && response.data) {
         // Don't automatically store tokens and user data after registration
         // User should verify email first before being logged in
         // Return the actual data, not the wrapper response
         return {
-          success: response.success,
-          message: response.message,
-          user: response.user,
-          access_token: response.access_token,
-          refresh_token: response.refresh_token,
-          expires_in: response.expires_in,
-          remember_me: response.remember_me
+          success: response.data.success,
+          message: response.data.message,
+          user: response.data.user,
+          access_token: response.data.access_token,
+          refresh_token: response.data.refresh_token,
+          expires_in: response.data.expires_in,
+          remember_me: response.data.remember_me
         }
       }
 
@@ -61,50 +60,32 @@ export class AuthService {
    */
   async login(data: LoginRequest): Promise<LoginResponse> {
     try {
-      const response = await apiClient.post<ApiLoginResponse>(
+      const response = await apiClient.post<LoginResponse>(
         endpoints.auth.login,
         data
       )
 
       // Backend returns data wrapped in ApiResponse format
       if (response.success && response.data) {
-        // Map API user to internal User format
-        const apiUser = response.data.user
-        const user: User = {
-          id: apiUser.id,
-          email: apiUser.email,
-          first_name: apiUser.full_name.split(' ')[0] || '',
-          last_name: apiUser.full_name.split(' ').slice(1).join(' ') || '',
-          full_name: apiUser.full_name,
-          role: apiUser.role,
-          is_active: true, // Default values for missing fields
-          is_verified: true,
-          profile_image: apiUser.avatar_url,
-          created_at: new Date().toISOString(),
-          confirmed_at: new Date().toISOString(),
-          last_login_at: new Date().toISOString(),
-          last_activity_at: new Date().toISOString()
-        }
-
         // Store tokens and user data
         tokenManager.setToken(response.data.access_token)
         tokenManager.setRefreshToken(response.data.refresh_token)
-        tokenManager.setUser(user)
+        tokenManager.setUser(response.data.user)
 
-        // Return the internal format for backward compatibility
+        // Return the actual data, not the wrapper response
         return {
-          success: true,
-          message: response.message,
-          user: user,
+          success: response.data.success,
+          message: response.data.message,
+          user: response.data.user,
           access_token: response.data.access_token,
           refresh_token: response.data.refresh_token,
-          expires_in: 86400, // Default 24 hours
-          remember_me: data.remember_me || false
+          expires_in: response.data.expires_in,
+          remember_me: response.data.remember_me
         }
       }
 
       // Use the specific error message from backend, fallback to generic message
-      throw new Error('Đăng nhập thất bại')
+      throw new Error(response.error || 'Đăng nhập thất bại')
     } catch (error) {
       if (error instanceof ApiClientError) {
         // Extract error message from API response

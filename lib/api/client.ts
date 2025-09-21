@@ -99,7 +99,7 @@ class ApiClient {
       // Add authorization header if token exists
       const token = tokenManager.getToken()
       if (token) {
-        requestHeaders.Authorization = `Bearer ${token}`
+        (requestHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`
       }
 
       // Make the request
@@ -244,7 +244,7 @@ class ApiClient {
     // Add authorization header if token exists
     const token = tokenManager.getToken()
     if (token) {
-      requestHeaders.Authorization = `Bearer ${token}`
+      (requestHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`
     }
 
     return this.request<T>(endpoint, {
