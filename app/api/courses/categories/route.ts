@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { 
+import {
   ApiCategoriesResponse,
-  CourseCategory 
+  CourseCategory
 } from '@/lib/api/types'
 
 // Mock categories data
@@ -61,16 +61,13 @@ export async function GET(request: NextRequest) {
     const response: ApiCategoriesResponse = {
       success: true,
       message: "Danh sách danh mục được tải thành công",
-      data: {
-        categories: mockCategories,
-        total_count: mockCategories.length
-      }
+      data: mockCategories
     }
 
     return NextResponse.json(response)
   } catch (error) {
     console.error('Categories API error:', error)
-    
+
     return NextResponse.json({
       success: false,
       message: "Có lỗi xảy ra khi tải danh sách danh mục",

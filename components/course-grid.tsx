@@ -1,7 +1,9 @@
 "use client"
 
+import { useMemo } from "react"
 import { BookOpen } from "lucide-react"
-import { CourseCard, CourseCardProps } from "./course-card"
+import { SimpleCourseCard } from "./simple-course-card"
+import { Course } from "@/lib/api/types"
 import {
   Pagination,
   PaginationContent,
@@ -13,7 +15,7 @@ import {
 } from "@/components/ui/pagination"
 
 export interface CourseGridProps {
-  courses: CourseCardProps[]
+  courses: Course[]
   currentPage: number
   totalPages: number
   coursesPerPage?: number
@@ -33,9 +35,15 @@ export function CourseGrid({
 }: CourseGridProps) {
   
   // Tính toán courses cho trang hiện tại
-  const startIndex = (currentPage - 1) * coursesPerPage
-  const endIndex = startIndex + coursesPerPage
-  const currentCourses = courses.slice(startIndex, endIndex)
+  const { currentCourses, startIndex, endIndex } = useMemo(() => {
+    const start = (currentPage - 1) * coursesPerPage
+    const end = start + coursesPerPage
+    return {
+      currentCourses: courses.slice(start, end),
+      startIndex: start,
+      endIndex: end
+    }
+  }, [courses, currentPage, coursesPerPage])
 
   // Tạo array các số trang để hiển thị
   const getPageNumbers = () => {
@@ -110,10 +118,9 @@ export function CourseGrid({
       {/* Course Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {currentCourses.map((course) => (
-          <CourseCard
+          <SimpleCourseCard
             key={course.id}
-            {...course}
-            onEnroll={onEnroll}
+            course={course}
           />
         ))}
       </div>

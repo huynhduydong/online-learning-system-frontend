@@ -103,11 +103,14 @@ class ApiClient {
       }
 
       // Make the request
-      const response = await fetch(getApiUrl(endpoint), {
+      const url = getApiUrl(endpoint)
+      console.log('Making API request to:', url)
+      const response = await fetch(url, {
         ...restOptions,
         headers: requestHeaders,
         signal: controller.signal,
       })
+      console.log('API response status:', response.status)
 
       clearTimeout(timeoutId)
 
@@ -165,7 +168,7 @@ class ApiClient {
         const response = await this.post('/auth/refresh', {
           refresh_token: refreshToken,
         })
-        
+
         if (response.success && response.data?.access_token) {
           tokenManager.setToken(response.data.access_token)
           return
@@ -177,7 +180,7 @@ class ApiClient {
 
     // Clear tokens and redirect to login
     tokenManager.removeTokens()
-    
+
     // Only redirect if we're in the browser
     if (typeof window !== 'undefined') {
       window.location.href = '/login'
