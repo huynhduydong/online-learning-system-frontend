@@ -256,10 +256,12 @@ export interface SearchCourse extends Course {
 export interface CoursePagination {
   current_page: number
   per_page: number
-  total_pages: number
-  total_items: number
+  pages: number
+  total: number
   has_next: boolean
-  has_previous: boolean
+  has_prev: boolean
+  next_page: number | null
+  prev_page: number | null
 }
 
 // Course Filters
@@ -667,4 +669,28 @@ export interface CourseListParams {
   page?: number
   per_page?: number
   limit?: number
+}
+
+// Query params for courses by category
+export interface CoursesQueryParams {
+  page?: number
+  limit?: number
+  sort?: string
+  order?: 'asc' | 'desc'
+}
+
+// API response for courses by category
+export interface ApiCoursesByCategoryResponse {
+  success: boolean
+  message: string
+  data: {
+    success: boolean
+    data: {
+      category: CourseCategory & {
+        icon?: string
+      }
+      courses: Course[]
+      pagination: CoursePagination
+    }
+  }
 }

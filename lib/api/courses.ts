@@ -10,6 +10,7 @@ import type {
   ApiCourseDetailResponse,
   ApiCourseResponse,
   Course,
+  CoursePagination,
   ApiCourseCatalogResponse,
   CourseCatalogQueryParams,
   CourseSearchQueryParams,
@@ -29,7 +30,9 @@ import type {
   ApiCourseReviewsResponse,
   SimilarCourse,
   SimilarCoursesQueryParams,
-  ApiSimilarCoursesResponse
+  ApiSimilarCoursesResponse,
+  CoursesQueryParams,
+  ApiCoursesByCategoryResponse
 } from './types'
 
 class CoursesService {
@@ -249,23 +252,25 @@ class CoursesService {
     }
   }
 
-  async getCoursesByCategory(slug: string, params?: CoursesQueryParams): Promise<{ courses: Course[], pagination: CoursePagination }> {
+  /**
+   * Get courses by category
+   */
+  async getCoursesByCategory(slug: string, params?: CoursesQueryParams): Promise<{ courses: Course[], pagination: CoursePagination, category: CourseCategory }> {
     try {
-      const queryString = params ? new URLSearchParams(params as any).toString() : ''
-      const endpoint = `/courses/categories/${slug}/courses${queryString ? `?${queryString}` : ''}`
+      const endpoint = `/courses/categories/${slug}/courses`
+      const response = await this.client.get<ApiCoursesByCategoryResponse>(endpoint, { params })
 
-      const response = await this.client.get<ApiCoursesResponse>(endpoint)
-
-      if (response.success && response.data) {
+      if (response.success && response.data && response.data.success && response.data.data) {
         return {
-          courses: response.data.courses,
-          pagination: response.data.pagination
+          courses: response.data.data.courses || [],
+          pagination: response.data.data.pagination,
+          category: response.data.data.category
         }
-      } else {
-        throw new Error(response.message || 'Failed to fetch courses by category')
       }
+
+      throw new Error('Failed to fetch courses by category')
     } catch (error) {
-      console.error('Courses by category fetch error:', error)
+      console.error('Error fetching courses by category:', error)
       throw error
     }
   }

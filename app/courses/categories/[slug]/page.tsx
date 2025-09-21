@@ -31,24 +31,7 @@ export default function CategoryCoursesPage({ }: CategoryCoursesPageProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [limit] = useState(12)
 
-  // Fetch category info
-  useEffect(() => {
-    const fetchCategory = async () => {
-      try {
-        const categories = await coursesService.getCategories()
-        const foundCategory = categories.find(cat => cat.slug === slug)
-        setCategory(foundCategory || null)
-      } catch (error) {
-        console.error('Error fetching category:', error)
-      }
-    }
-
-    if (slug) {
-      fetchCategory()
-    }
-  }, [slug])
-
-  // Fetch courses
+  // Fetch courses and category info
   useEffect(() => {
     const fetchCourses = async () => {
       if (!slug) return
@@ -66,6 +49,7 @@ export default function CategoryCoursesPage({ }: CategoryCoursesPageProps) {
 
         setCourses(result.courses)
         setPagination(result.pagination)
+        setCategory(result.category)
       } catch (error) {
         console.error('Error fetching courses:', error)
         setError('Không thể tải danh sách khóa học. Vui lòng thử lại sau.')
@@ -136,9 +120,16 @@ export default function CategoryCoursesPage({ }: CategoryCoursesPageProps) {
           <span className="text-foreground">{category?.name || slug}</span>
         </nav>
 
-        <h1 className="text-3xl font-bold mb-2">
-          {category?.name || 'Khóa học'}
-        </h1>
+        <div className="flex items-center gap-3 mb-2">
+          {category?.icon && (
+            <div className="text-4xl">
+              {category.icon}
+            </div>
+          )}
+          <h1 className="text-3xl font-bold">
+            {category?.name || 'Khóa học'}
+          </h1>
+        </div>
         {category?.description && (
           <p className="text-muted-foreground text-lg">
             {category.description}
@@ -150,7 +141,7 @@ export default function CategoryCoursesPage({ }: CategoryCoursesPageProps) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted-foreground">
-            {pagination?.total_items || 0} khóa học
+            {pagination?.total || 0} khóa học
           </span>
         </div>
 
@@ -220,20 +211,20 @@ export default function CategoryCoursesPage({ }: CategoryCoursesPageProps) {
       )}
 
       {/* Pagination */}
-      {pagination && pagination.total_pages > 1 && (
+      {pagination && pagination.pages > 1 && (
         <div className="flex justify-center items-center space-x-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
-            disabled={!pagination.has_previous}
+            disabled={!pagination.has_prev}
           >
             <ChevronLeft className="h-4 w-4" />
             Trước
           </Button>
 
           <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, pagination.total_pages) }, (_, i) => {
+            {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
               const page = i + 1
               return (
                 <Button
