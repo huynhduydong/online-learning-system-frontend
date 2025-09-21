@@ -2,12 +2,17 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 
 export function MSWProvider({ children }: { children: React.ReactNode }) {
   const [mswReady, setMSWReady] = useState(false)
+  const initRef = useRef(false)
 
   useEffect(() => {
+    // Prevent double initialization during development hot reload
+    if (initRef.current) return
+    initRef.current = true
+
     const init = async () => {
       if (typeof window !== "undefined") {
         try {
@@ -26,6 +31,9 @@ export function MSWProvider({ children }: { children: React.ReactNode }) {
           // Continue without MSW if it fails
           setMSWReady(true)
         }
+      } else {
+        // Server-side, just mark as ready
+        setMSWReady(true)
       }
     }
 

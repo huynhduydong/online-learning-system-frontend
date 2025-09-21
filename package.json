@@ -57,7 +57,6 @@
     "lucide-react": "^0.454.0",
     "msw": "latest",
     "next": "14.2.16",
-    "next-intl": "latest",
     "next-themes": "latest",
     "node-notifier": "latest",
     "react": "^18",

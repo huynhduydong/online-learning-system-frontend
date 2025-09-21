@@ -21,12 +21,6 @@ jest.mock("next/navigation", () => ({
   },
 }))
 
-// Mock next-intl
-jest.mock("next-intl", () => ({
-  useTranslations: () => (key) => key,
-  useLocale: () => "vi",
-}))
-
 // Mock environment variables
-process.env.NEXT_PUBLIC_API_URL = "http://localhost:3000/api"
+process.env.NEXT_PUBLIC_API_BASE_URL = "http://localhost:3000/api"
 process.env.NEXT_PUBLIC_APP_NAME = "Online Learning System"

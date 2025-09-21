@@ -78,7 +78,7 @@ Cập nhật các biến môi trường trong `.env.local`:
 \`\`\`env
 # App Configuration
 NEXT_PUBLIC_APP_NAME="Online Learning System"
-NEXT_PUBLIC_API_URL="http://localhost:3000/api"
+NEXT_PUBLIC_API_BASE_URL="http://localhost:3000/api"
 
 # Development
 NODE_ENV=development

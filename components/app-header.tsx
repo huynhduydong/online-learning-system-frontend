@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { Search, Menu, User, Bell, Settings, LogOut } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { AppContainer } from "./app-container"
 import { ThemeToggle } from "./theme-toggle"
+import { CourseCategoriesNav } from "./course-categories-nav"
 
 interface NavItem {
   title: string
@@ -54,11 +56,6 @@ const defaultNavItems: NavItem[] = [
     description: "Trang chủ của hệ thống"
   },
   {
-    title: "Khóa học",
-    href: "/courses",
-    description: "Danh sách các khóa học"
-  },
-  {
     title: "Giảng viên",
     href: "/instructors",
     description: "Thông tin giảng viên"
@@ -72,7 +69,7 @@ const defaultNavItems: NavItem[] = [
 
 export function AppHeader({
   className,
-  navItems = defaultNavItems,
+  navItems,
   user,
   onSearch,
   showSearch = true,
@@ -82,13 +79,15 @@ export function AppHeader({
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isSearchFocused, setIsSearchFocused] = React.useState(false)
 
+  const finalNavItems = navItems || defaultNavItems
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     onSearch?.(searchQuery)
   }
 
   return (
-    <header 
+    <header
       className={cn(
         "sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
         className
@@ -99,10 +98,10 @@ export function AppHeader({
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-4">
-            <Link 
+            <Link
               href="/"
               className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md"
-              aria-label="Trang chủ"
+              aria-label="Về trang chủ"
             >
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">EL</span>
@@ -114,8 +113,9 @@ export function AppHeader({
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Điều hướng chính">
-            {navItems.map((item) => (
+          <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Menu điều hướng chính">
+            <CourseCategoriesNav />
+            {finalNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -172,7 +172,7 @@ export function AppHeader({
                       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         type="search"
-                        placeholder="Tìm kiếm..."
+                        placeholder="Nhập từ khóa tìm kiếm..."
                         className="pl-10"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -192,8 +192,8 @@ export function AppHeader({
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 {notificationCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
                   >
                     {notificationCount > 99 ? "99+" : notificationCount}
@@ -257,18 +257,21 @@ export function AppHeader({
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only">Menu</span>
+                  <span className="sr-only">Mở menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle>Menu</SheetTitle>
                   <SheetDescription>
-                    Điều hướng và tùy chọn
+                    Điều hướng trang web
                   </SheetDescription>
                 </SheetHeader>
-                <nav className="flex flex-col space-y-4 mt-6" role="navigation" aria-label="Menu di động">
-                  {navItems.map((item) => (
+                <nav className="flex flex-col space-y-4 mt-6" role="navigation" aria-label="Menu điều hướng di động">
+                  <div className="px-2 py-1">
+                    <CourseCategoriesNav className="w-full" isMobile={true} />
+                  </div>
+                  {finalNavItems.map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
