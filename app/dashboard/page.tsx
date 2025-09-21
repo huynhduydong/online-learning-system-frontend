@@ -50,11 +50,10 @@ import { useAuth } from '@/contexts/auth-context'
 import { useDashboard } from '@/hooks/use-dashboard'
 import { formatCurrency } from '@/lib/utils'
 
-export default function DashboardPage({ params }: { params: { locale: string } }) {
+export default function DashboardPage() {
   const { user: authUser, logout } = useAuth()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { locale } = params
   
   // Use dashboard hook for real API data
   const {
@@ -75,10 +74,10 @@ export default function DashboardPage({ params }: { params: { locale: string } }
   useEffect(() => {
     // Check if user is authenticated
     if (!authUser) {
-      router.push(`/${locale}/login`)
+      router.push('/login')
       return
     }
-  }, [authUser, router, locale])
+  }, [authUser, router])
 
   // Handle errors
   useEffect(() => {
@@ -90,16 +89,16 @@ export default function DashboardPage({ params }: { params: { locale: string } }
 
   const handleLogout = async () => {
     await logout()
-    router.push(`/${locale}/login`)
+    router.push('/login')
   }
 
   const sidebarItems = [
-    { icon: BarChart3, label: 'Dashboard', href: `/${locale}/dashboard`, active: true },
-    { icon: BookOpen, label: 'Khóa học của tôi', href: `/${locale}/dashboard/courses` },
-    { icon: Calendar, label: 'Lịch học', href: `/${locale}/dashboard/schedule` },
-    { icon: Award, label: 'Thành tích', href: `/${locale}/dashboard/achievements` },
-    { icon: Activity, label: 'Tiến độ', href: `/${locale}/dashboard/progress` },
-    { icon: Settings, label: 'Cài đặt', href: `/${locale}/dashboard/settings` }
+    { icon: BarChart3, label: 'Dashboard', href: '/dashboard', active: true },
+    { icon: BookOpen, label: 'Khóa học của tôi', href: '/dashboard/courses' },
+    { icon: Calendar, label: 'Lịch học', href: '/dashboard/schedule' },
+    { icon: Award, label: 'Thành tích', href: '/dashboard/achievements' },
+    { icon: Activity, label: 'Tiến độ', href: '/dashboard/progress' },
+    { icon: Settings, label: 'Cài đặt', href: '/dashboard/settings' }
   ]
 
   if (loading) {
@@ -296,7 +295,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push(`/${locale}/dashboard/settings`)}>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
                     <Settings className="mr-2 h-4 w-4" />
                     Cài đặt
                   </DropdownMenuItem>

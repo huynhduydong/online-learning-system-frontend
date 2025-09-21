@@ -163,7 +163,7 @@ pnpm analyze
 ### Environment Variables
 \`\`\`env
 # Production
-NEXT_PUBLIC_API_URL=https://api.production.com
+NEXT_PUBLIC_API_BASE_URL=https://api.production.com
 NEXT_PUBLIC_APP_NAME="Online Learning System"
 
 # Database

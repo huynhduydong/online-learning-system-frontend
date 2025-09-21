@@ -1,10 +1,8 @@
 'use client'
 
 /**
- * Register Page
- * User registration form with validation and role selection
+ * Register page component
  */
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -39,7 +37,7 @@ import { config } from '@/lib/config'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { register: registerUser, isLoading, error, clearError, isAuthenticated } = useAuth()
+  const { registerUser, isLoading, error, clearError, isAuthenticated } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
