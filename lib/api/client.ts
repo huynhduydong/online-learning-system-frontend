@@ -104,13 +104,11 @@ class ApiClient {
 
       // Make the request
       const url = getApiUrl(endpoint)
-      console.log('Making API request to:', url)
       const response = await fetch(url, {
         ...restOptions,
         headers: requestHeaders,
         signal: controller.signal,
       })
-      console.log('API response status:', response.status)
 
       clearTimeout(timeoutId)
 
