@@ -24,7 +24,7 @@ const registrationSchema = z.object({
   fullName: z.string()
     .min(2, 'Họ tên phải có ít nhất 2 ký tự')
     .max(100, 'Họ tên không được vượt quá 100 ký tự')
-    .regex(/^[a-zA-ZÀ-ỹ\s]+$/, 'Họ tên chỉ được chứa chữ cái và khoảng trắng'),
+    .regex(/^[\p{L}\s]+$/u, 'Họ tên chỉ được chứa chữ cái và khoảng trắng'),
   email: z.string()
     .email('Email không hợp lệ')
     .max(255, 'Email không được vượt quá 255 ký tự'),
