@@ -106,7 +106,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href={item.href as any}>
+                      <Link href={item.href as string}>
                         <item.icon className="mr-3 h-4 w-4" />
                         {item.title}
                       </Link>
