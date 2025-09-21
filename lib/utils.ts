@@ -23,6 +23,6 @@ export function formatDuration(minutes: number): string {
   } else if (remainingMinutes === 0) {
     return `${hours} giờ`
   } else {
-    return `${hours}h ${remainingMinutes}m`
+    return `${hours} giờ ${remainingMinutes} phút`
   }
 }
