@@ -444,6 +444,12 @@ export const handlers = [
     return HttpResponse.json(mockCourses.slice(0, 1)) // Return first course as enrolled
   }),
 
+  // Instructor course management endpoints - DISABLED for real API integration
+  // These endpoints now use real backend APIs instead of MSW mocking
+  
+  // NOTE: MSW handlers for /api/instructor/* are disabled
+  // Real API calls will go to http://localhost:5000/api/instructor/*
+
   // Auth endpoints
   http.post("/api/auth/login", async ({ request }) => {
     const { email, password } = (await request.json()) as { email: string; password: string }
@@ -452,6 +458,10 @@ export const handlers = [
 
     // Mock authentication - accept any valid email/password combo
     if (email && password && email.includes('@') && password.length >= 6) {
+      // Determine role based on email for development
+      const role = email.includes('instructor') || email.includes('teacher') ? 'instructor' : 'student'
+      const userId = role === 'instructor' ? 117 : 1
+      
       return HttpResponse.json({
         success: true,
         message: "Login successful",
@@ -460,12 +470,12 @@ export const handlers = [
         expires_in: 3600,
         remember_me: false,
         user: {
-          id: 1,
+          id: userId,
           email: email,
-          first_name: "Test",
-          last_name: "User",
-          full_name: "Test User",
-          role: "student",
+          first_name: role === 'instructor' ? 'Instructor' : 'Test',
+          last_name: role === 'instructor' ? 'Demo' : 'User',
+          full_name: role === 'instructor' ? 'Instructor Demo' : 'Test User',
+          role: role,
           is_active: true,
           is_verified: true,
           profile_image: "/user-avatar.jpg",
@@ -508,6 +518,11 @@ export const handlers = [
     // Mock authentication - accept any valid email/password combo
     if (email && password && email.includes('@') && password.length >= 6) {
       console.log('✅ MSW External Login SUCCESS!')
+      
+      // Determine role based on email for development
+      const role = email.includes('instructor') || email.includes('teacher') ? 'instructor' : 'student'
+      const userId = role === 'instructor' ? 117 : 1
+      
       const response = {
         success: true,
         message: "Login successful",
@@ -516,12 +531,12 @@ export const handlers = [
         expires_in: 3600,
         remember_me: false,
         user: {
-          id: 1,
+          id: userId,
           email: email,
-          first_name: "Test",
-          last_name: "User",
-          full_name: "Test User",
-          role: "student",
+          first_name: role === 'instructor' ? 'Instructor' : 'Test',
+          last_name: role === 'instructor' ? 'Demo' : 'User',
+          full_name: role === 'instructor' ? 'Instructor Demo' : 'Test User',
+          role: role,
           is_active: true,
           is_verified: true,
           profile_image: "/user-avatar.jpg",

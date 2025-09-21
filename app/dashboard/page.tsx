@@ -28,7 +28,8 @@ import {
   Menu,
   X,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  GraduationCap
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -98,7 +99,11 @@ export default function DashboardPage() {
     { icon: Calendar, label: 'Lịch học', href: '/dashboard/schedule' },
     { icon: Award, label: 'Thành tích', href: '/dashboard/achievements' },
     { icon: Activity, label: 'Tiến độ', href: '/dashboard/progress' },
-    { icon: Settings, label: 'Cài đặt', href: '/dashboard/settings' }
+    { icon: Settings, label: 'Cài đặt', href: '/dashboard/settings' },
+    // Development: Add instructor studio link
+    ...(process.env.NODE_ENV === 'development' ? [
+      { icon: GraduationCap, label: 'Instructor Studio', href: '/studio', active: false }
+    ] : [])
   ]
 
   if (loading) {
