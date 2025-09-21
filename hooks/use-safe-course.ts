@@ -4,7 +4,7 @@ export function useSafeCourse(course: Course | null | undefined) {
     // Debug logging
     console.log('useSafeCourse input:', course)
 
-    // Tạo một course object an toàn với các giá trị mặc định
+    // Create a safe course object with default values
     const safeCourse: Course | null = course ? {
         id: course.id || 0,
         title: course.title || 'Untitled Course',
