@@ -171,8 +171,7 @@ class CoursesService {
    */
   async getCategories(): Promise<CourseCategory[]> {
     try {
-      const response = await this.client.get<any>('/courses/categories')
-      console.log('Raw categories response:', response)
+      const response = await this.client.get<ApiCategoriesResponse>('/courses/categories')
 
       if (response.success) {
         // Handle nested data structure from backend
