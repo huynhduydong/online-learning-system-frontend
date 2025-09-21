@@ -176,13 +176,14 @@ export interface CourseInstructor {
 }
 
 export interface CoursePrice {
-  amount?: number
+  /**
+   * The current price of the course (use current_price).
+   * 'amount' is deprecated; use 'current_price' instead.
+   */
+  current_price?: number
+  original_price?: number
   display?: string
   is_free?: boolean
-  original_price?: number
-  current?: number
-  original?: number
-  current_price?: number
 }
 
 export interface CourseRating {
