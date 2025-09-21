@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge"
 import { AppContainer } from "./app-container"
 import { ThemeToggle } from "./theme-toggle"
 import { CourseCategoriesNav } from "./course-categories-nav"
+import { CartDrawer } from "./cart/cart-drawer"
 
 interface NavItem {
   title: string
@@ -186,6 +187,9 @@ export function AppHeader({
 
             {/* Theme Toggle */}
             <ThemeToggle />
+
+            {/* Cart */}
+            <CartDrawer />
 
             {/* Notifications */}
             {showNotifications && (

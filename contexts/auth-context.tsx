@@ -59,13 +59,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const userData = await authService.getCurrentUser()
           setUser(userData)
         } catch (error) {
-          // If server request fails, use stored user data
-          const storedUser = authService.getStoredUser()
-          if (storedUser) {
-            setUser(storedUser)
-          } else {
-            // Clear invalid tokens
+          console.error('Failed to get current user:', error)
+          
+          // Check if it's an authentication error (401, 422, etc.)
+          const isAuthError = error instanceof Error && 
+            (error.message.includes('401') || 
+             error.message.includes('422') || 
+             error.message.includes('Unauthorized') ||
+             error.message.includes('UNPROCESSABLE'))
+          
+          if (isAuthError) {
+            // Clear invalid tokens and auth state
             authService.clearAuth()
+            setUser(null)
+          } else {
+            // For other errors, try to use stored user data
+            const storedUser = authService.getStoredUser()
+            if (storedUser) {
+              setUser(storedUser)
+            } else {
+              // Clear invalid tokens
+              authService.clearAuth()
+            }
           }
         }
       }

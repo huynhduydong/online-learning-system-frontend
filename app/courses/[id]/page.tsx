@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useParams } from "next/navigation"
-import { Play, Clock, Users, Star, BookOpen, CheckCircle, PlayCircle, Award, Globe, ArrowLeft } from "lucide-react"
+import { Play, Clock, Users, Star, CheckCircle, PlayCircle, Award, Globe, ArrowLeft, ShoppingCart, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { coursesService } from "@/lib/api/courses"
 import { formatCurrency, formatDuration } from "@/lib/utils"
 import type { CourseDetails } from "@/lib/api/types"
+import { useCart } from "@/hooks/use-cart"
+import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 
 export default function CourseDetailPage() {
@@ -19,6 +21,15 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<CourseDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Cart functionality
+  const { addToCart, isItemInCart, cart, isLoading: cartLoading } = useCart()
+  const { toast } = useToast()
+
+  // Memoize cart check to prevent unnecessary re-renders
+  const isInCart = useMemo(() => {
+    return course ? isItemInCart(course.id) : false
+  }, [course?.id, isItemInCart])
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -47,38 +58,44 @@ export default function CourseDetailPage() {
       // TODO: Implement enrollment API call
       console.log("Enrolling in course:", course.id)
       // await enrollmentService.enrollInCourse(course.id)
-      alert("Đăng ký thành công! (Demo)")
+      toast({
+        title: "Đăng ký thành công!",
+        description: "Bạn đã đăng ký khóa học thành công. (Demo)",
+        variant: "default",
+      })
     } catch (error) {
       console.error("Enrollment failed:", error)
-      alert("Đăng ký thất bại. Vui lòng thử lại.")
+      toast({
+        title: "Đăng ký thất bại",
+        description: "Không thể đăng ký khóa học. Vui lòng thử lại.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleAddToCart = async () => {
+    if (!course) return
+    
+    try {
+      await addToCart(course.slug)
+      toast({
+        title: "Đã thêm vào giỏ hàng!",
+        description: `Khóa học "${course.title}" đã được thêm vào giỏ hàng của bạn.`,
+        variant: "default",
+      })
+    } catch (error) {
+      console.error("Failed to add to cart:", error)
+      toast({
+        title: "Không thể thêm vào giỏ hàng",
+        description: "Đã xảy ra lỗi khi thêm khóa học. Vui lòng thử lại.",
+        variant: "destructive",
+      })
     }
   }
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl font-bold">Online Learning System</h1>
-              </div>
-              <nav className="hidden md:flex items-center space-x-6">
-                <Link href="/" className="text-muted-foreground hover:text-foreground">
-                  Trang chủ
-                </Link>
-                <Link href="/courses" className="text-muted-foreground hover:text-foreground">
-                  Khóa học
-                </Link>
-                <Button variant="outline">Đăng nhập</Button>
-                <Button>Đăng ký</Button>
-              </nav>
-            </div>
-          </div>
-        </header>
-
         <div className="container mx-auto px-4 py-8">
           {/* Loading skeleton */}
           <div className="grid lg:grid-cols-3 gap-8 mb-8">
@@ -124,28 +141,6 @@ export default function CourseDetailPage() {
   if (error || !course) {
     return (
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <header className="border-b">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl font-bold">Online Learning System</h1>
-              </div>
-              <nav className="hidden md:flex items-center space-x-6">
-                <Link href="/" className="text-muted-foreground hover:text-foreground">
-                  Trang chủ
-                </Link>
-                <Link href="/courses" className="text-muted-foreground hover:text-foreground">
-                  Khóa học
-                </Link>
-                <Button variant="outline">Đăng nhập</Button>
-                <Button>Đăng ký</Button>
-              </nav>
-            </div>
-          </div>
-        </header>
-
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4">Không tìm thấy khóa học</h2>
@@ -182,27 +177,6 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <BookOpen className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold">Online Learning System</h1>
-            </div>
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link href="/" className="text-muted-foreground hover:text-foreground">
-                Trang chủ
-              </Link>
-              <Link href="/courses" className="text-muted-foreground hover:text-foreground">
-                Khóa học
-              </Link>
-              <Button variant="outline">Đăng nhập</Button>
-              <Button>Đăng ký</Button>
-            </nav>
-          </div>
-        </div>
-      </header>
 
       <div className="container mx-auto px-4 py-8">
         {/* Breadcrumb */}
@@ -301,9 +275,25 @@ export default function CourseDetailPage() {
                     </div>
                   )}
                 </div>
-                <Button size="lg" className="w-full" onClick={handleEnroll}>
-                  {isFreeCourse ? "Học miễn phí" : "Đăng ký ngay"}
-                </Button>
+                <div className="space-y-2">
+                  <Button size="lg" className="w-full" onClick={handleEnroll}>
+                    {isFreeCourse ? "Học miễn phí" : "Đăng ký ngay"}
+                  </Button>
+                  
+                  {!isFreeCourse && (
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={handleAddToCart}
+                      disabled={cartLoading || isInCart}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      {isInCart ? "Đã có trong giỏ hàng" : "Thêm vào giỏ hàng"}
+                    </Button>
+                  )}
+                </div>
+                
                 <p className="text-sm text-muted-foreground text-center">
                   {isFreeCourse ? "Truy cập trọn đời" : "Đảm bảo hoàn tiền trong 30 ngày"}
                 </p>

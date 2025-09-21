@@ -640,6 +640,155 @@ export interface CourseCatalogParams {
   sort_order?: 'asc' | 'desc'
 }
 
+// Cart Types (based on API documentation)
+export interface CartItem {
+  id: number
+  course_id: number
+  course_title: string
+  course_instructor: string
+  price: number
+  original_price: number
+  added_at: string
+}
+
+export interface Cart {
+  id: number
+  items: CartItem[]
+  summary: CartSummary
+  applied_coupon: AppliedCoupon | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Coupon {
+  id: number
+  code: string
+  description: string
+  discount_type: 'percentage' | 'fixed'
+  discount_value: number
+  min_order_amount: number
+  max_discount_amount: number
+  expires_at: string
+  is_active: boolean
+}
+
+export interface AvailableCouponsResponse {
+  success: boolean
+  message: string
+  data: {
+    coupons: Coupon[]
+  }
+}
+
+// Legacy types for backward compatibility
+export interface CartSummary {
+  subtotal: number
+  discount: number
+  total: number
+  items_count: number
+  currency: string
+}
+
+export interface AppliedCoupon extends Coupon {
+  discount_amount: number
+}
+
+// Cart API Request/Response Types (based on API documentation)
+export interface AddToCartRequest {
+  course_id: number
+}
+
+export interface AddToCartResponse {
+  success: boolean
+  message: string
+  data: Cart
+}
+
+export interface UpdateCartItemRequest {
+  quantity: number
+}
+
+export interface UpdateCartItemResponse {
+  success: boolean
+  message: string
+  data: Cart
+}
+
+export interface RemoveFromCartResponse {
+  success: boolean
+  message: string
+  data: Cart
+}
+
+export interface GetCartResponse {
+  success: boolean
+  message: string
+  data: Cart
+}
+
+export interface ApplyCouponRequest {
+  coupon_code: string
+}
+
+export interface ApplyCouponResponse {
+  success: boolean
+  message: string
+  data: Cart
+}
+
+export interface RemoveCouponResponse {
+  success: boolean
+  message: string
+  data: Cart
+}
+
+export interface ClearCartResponse {
+  success: boolean
+  message: string
+}
+
+export interface MergeCartResponse {
+  success: boolean
+  message: string
+  data: Cart
+}
+
+export interface CartHealthResponse {
+  success: boolean
+  message: string
+  data: {
+    status: string
+    service: string
+  }
+}
+
+// Cart Context Types - Updated for optimized approach
+export interface CartContextType {
+  cart: Cart | null
+  isLoading: boolean
+  error: string | null
+  isSyncing: boolean // New: Background sync status
+  addToCart: (courseId: number, quantity?: number) => Promise<void>
+  updateCartItem: (itemId: string, quantity: number) => Promise<void>
+  removeFromCart: (itemId: string) => Promise<void>
+  applyCoupon: (couponCode: string) => Promise<void>
+  removeCoupon: () => Promise<void>
+  clearCart: () => Promise<void>
+  refreshCart: () => Promise<void>
+  clearLocalCart: () => void
+  isCartStale: () => boolean
+}
+
+// Cart Hook Types
+export interface UseCartReturn extends CartContextType {
+  itemsCount: number
+  subtotal: number
+  total: number
+  hasItems: boolean
+  isItemInCart: (courseId: number) => boolean
+  getCartItem: (courseId: number) => CartItem | undefined
+}
+
 // New API Catalog Response Structure (matches the new API format)
 export interface NewApiCourseCatalogResponse {
   success: boolean

@@ -67,6 +67,34 @@ class CoursesService {
   }
 
   /**
+   * Get course details by ID
+   * Supports both new API structure and legacy format
+   */
+  async getCourseById(id: number): Promise<CourseDetails> {
+    try {
+      const response = await this.client.get<ApiCourseDetailResponse | ApiCourseResponse>(`/courses/id/${id}`)
+
+      if (response.success) {
+        // Check if it's the new API structure with nested data
+        if ('data' in response.data && typeof response.data.data === 'object') {
+          // New API structure: { data: { data: CourseDetails, success: boolean } }
+          const newApiResponse = response as ApiCourseDetailResponse
+          return newApiResponse.data.data
+        } else {
+          // Legacy API structure: { data: CourseDetails }
+          const legacyResponse = response as ApiCourseResponse
+          return legacyResponse.data
+        }
+      } else {
+        throw new Error(response.message || 'Failed to fetch course details')
+      }
+    } catch (error) {
+      console.error('Course detail fetch error:', error)
+      throw error
+    }
+  }
+
+  /**
    * Get course catalog with filters and pagination
    */
   async getCourseCatalog(params?: CourseCatalogQueryParams): Promise<Course[]> {

@@ -117,8 +117,8 @@ class ApiClient {
 
       // Handle non-2xx responses
       if (!response.ok) {
-        // Handle 401 Unauthorized - token might be expired
-        if (response.status === 401) {
+        // Handle 401 Unauthorized or 422 Unprocessable Entity - token might be expired or invalid
+        if (response.status === 401 || response.status === 422) {
           await this.handleUnauthorized()
         }
 

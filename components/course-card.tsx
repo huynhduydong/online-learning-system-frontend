@@ -1,6 +1,6 @@
 "use client"
 
-import { Star, Clock, Users, BookOpen } from "lucide-react"
+import { Star, Clock, Users, BookOpen, ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import { useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,6 +28,7 @@ function formatDuration(minutes: number): string {
 }
 import { Course } from "@/lib/api/types"
 import { useSafeCourse } from "@/hooks/use-safe-course"
+import { useCart } from "@/hooks/use-cart"
 
 export interface CourseCardProps {
   id: string
@@ -65,6 +66,7 @@ export function CourseCard({
   onEnroll
 }: CourseCardNewProps) {
   const course = useSafeCourse(rawCourse)
+  const { addToCart, isItemInCart, isLoading: cartLoading } = useCart()
   
   // Guard clause - nếu course không tồn tại thì return null
   if (!course) {
@@ -76,6 +78,18 @@ export function CourseCard({
     e.preventDefault()
     e.stopPropagation()
     onEnroll?.(course?.id?.toString() || '')
+  }
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!course.id) return
+    
+    try {
+      await addToCart(course.id.toString())
+    } catch (error) {
+      console.error("Failed to add to cart:", error)
+    }
   }
 
   const shouldShowRating = useMemo(() => {
@@ -154,13 +168,27 @@ export function CourseCard({
                     )}
                   </div>
 
-                  <Button
-                    size="sm"
-                    onClick={handleEnroll}
-                    className="mt-2"
-                  >
-                    {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
-                  </Button>
+                  <div className="flex flex-col gap-1 mt-2">
+                    <Button
+                      size="sm"
+                      onClick={handleEnroll}
+                    >
+                      {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
+                    </Button>
+                    
+                    {!(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleAddToCart}
+                        disabled={cartLoading || isItemInCart(course.id)}
+                        className="text-xs"
+                      >
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        {isItemInCart(course.id) ? 'Trong giỏ' : 'Thêm vào giỏ'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -242,12 +270,27 @@ export function CourseCard({
                 </>
               )}
             </div>
-            <Button
-              size="sm"
-              onClick={handleEnroll}
-            >
-              {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
-            </Button>
+            <div className="flex flex-col gap-1">
+              <Button
+                size="sm"
+                onClick={handleEnroll}
+              >
+                {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
+              </Button>
+              
+              {!(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAddToCart}
+                  disabled={cartLoading || isItemInCart(course.id)}
+                  className="text-xs"
+                >
+                  <ShoppingCart className="w-3 h-3 mr-1" />
+                  {isItemInCart(course.id) ? 'Trong giỏ' : 'Thêm vào giỏ'}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
