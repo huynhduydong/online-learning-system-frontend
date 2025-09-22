@@ -33,12 +33,12 @@ export default function StudioPage() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const response = await instructorService.getCourses({
         sort_by: 'updated_at',
         sort_order: 'desc'
       })
-      
+
       if (response.success && response.data) {
         setCourses(response.data.courses)
       } else {
@@ -66,11 +66,11 @@ export default function StudioPage() {
   const getStatusText = (status: 'draft' | 'published' | 'archived') => {
     switch (status) {
       case 'published':
-        return 'Published'
+        return 'Đã xuất bản'
       case 'archived':
-        return 'Archived'
+        return 'Đã lưu trữ'
       default:
-        return 'Draft'
+        return 'Bản nháp'
     }
   }
 
@@ -114,16 +114,16 @@ export default function StudioPage() {
               </Link>
             </Button>
           </div>
-          
+
           <Card className="text-center py-12">
             <CardContent>
               <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-              <CardTitle className="mb-2">Error Loading Courses</CardTitle>
+              <CardTitle className="mb-2">Lỗi tải khóa học</CardTitle>
               <CardDescription className="mb-4">
                 {error}
               </CardDescription>
               <Button onClick={fetchCourses} variant="outline">
-                Try Again
+                Thử lại
               </Button>
             </CardContent>
           </Card>
@@ -137,13 +137,13 @@ export default function StudioPage() {
       <AppContainer className="py-8">
         <div className="flex items-center justify-between mb-8">
           <PageHeading
-            title="My Courses"
-            description="Manage and create your courses"
+            title="Khóa học của tôi"
+            description="Quản lý và tạo khóa học"
           />
           <Button asChild>
             <Link href="/studio/create">
               <Plus className="mr-2 h-4 w-4" />
-              Create New Course
+              Tạo khóa học mới
             </Link>
           </Button>
         </div>
@@ -153,14 +153,14 @@ export default function StudioPage() {
           <Card className="text-center py-12">
             <CardContent>
               <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <CardTitle className="mb-2">No courses yet</CardTitle>
+              <CardTitle className="mb-2">Chưa có khóa học</CardTitle>
               <CardDescription className="mb-4">
-                Start creating your first course to share your knowledge with students.
+                Bắt đầu tạo khóa học đầu tiên để chia sẻ kiến thức với học viên.
               </CardDescription>
               <Button asChild>
                 <Link href="/studio/create">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Course
+                  Tạo khóa học đầu tiên
                 </Link>
               </Button>
             </CardContent>
@@ -187,7 +187,7 @@ export default function StudioPage() {
                         )}
                       </div>
                     </div>
-                    
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -198,14 +198,14 @@ export default function StudioPage() {
                         <DropdownMenuItem asChild>
                           <Link href={`/studio/courses/${course.id}/edit`}>
                             <Edit className="mr-2 h-4 w-4" />
-                            Edit Course
+                            Chỉnh sửa khóa học
                           </Link>
                         </DropdownMenuItem>
                         {course.status === 'published' && (
                           <DropdownMenuItem asChild>
                             <Link href={`/courses/${course.slug}`}>
                               <Eye className="mr-2 h-4 w-4" />
-                              View Live Course
+                              Xem khóa học trực tiếp
                             </Link>
                           </DropdownMenuItem>
                         )}
@@ -216,23 +216,23 @@ export default function StudioPage() {
 
                 <CardContent>
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <div>Created: {new Date(course.created_at).toLocaleDateString()}</div>
-                    <div>Last updated: {new Date(course.updated_at).toLocaleDateString()}</div>
+                    <div>Tạo: {new Date(course.created_at).toLocaleDateString('vi-VN')}</div>
+                    <div>Cập nhật: {new Date(course.updated_at).toLocaleDateString('vi-VN')}</div>
                     {course.status === 'published' && course.published_at && (
-                      <div>Published: {new Date(course.published_at).toLocaleDateString()}</div>
+                      <div>Xuất bản: {new Date(course.published_at).toLocaleDateString('vi-VN')}</div>
                     )}
                   </div>
-                  
+
                   <div className="mt-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full"
                       asChild
                     >
                       <Link href={`/studio/courses/${course.id}/edit`}>
                         <Edit className="mr-2 h-4 w-4" />
-                        {course.status === 'draft' ? 'Continue Editing' : 'Edit Course'}
+                        {course.status === 'draft' ? 'Tiếp tục chỉnh sửa' : 'Chỉnh sửa khóa học'}
                       </Link>
                     </Button>
                   </div>

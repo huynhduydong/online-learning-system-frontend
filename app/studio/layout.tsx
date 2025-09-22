@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { BookOpen, Plus, GraduationCap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { useRequireRole } from '@/contexts/auth-context'
+import { useAuth } from '@/contexts/auth-context'
 import { AppContainer } from '@/components/app-container'
 
 interface StudioLayoutProps {
@@ -29,12 +29,11 @@ const navigationItems = [
 ]
 
 export default function StudioLayout({ children }: StudioLayoutProps) {
-  // Protect route - only instructors can access
-  // TODO: Re-enable strict role checking when real API is available
-  const auth = useRequireRole('instructor')
+  // Use regular auth hook instead of useRequireRole for development flexibility
+  const { user, isAuthenticated, isLoading } = useAuth()
   const pathname = usePathname()
 
-  if (auth.isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -45,14 +44,34 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
     )
   }
 
-  // Temporary: Allow access even if not instructor for development with mocks
-  // TODO: Remove this when real API is connected
-  if (!auth.isAuthenticated && process.env.NODE_ENV === 'development') {
+  // Check authentication first
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Please log in to access Instructor Studio</p>
-          <p className="text-sm text-muted-foreground">For development: Use email containing "instructor" or "teacher"</p>
+          <Button asChild>
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Development mode: Allow access regardless of role with warning
+  if (process.env.NODE_ENV === 'development' && user?.role !== 'instructor') {
+    console.warn(`Studio accessed by user with role: ${user?.role}. This is allowed in development mode.`)
+  }
+
+  // Production mode: Strict role checking
+  if (process.env.NODE_ENV === 'production' && user?.role !== 'instructor') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Access denied. Instructor role required.</p>
+          <Button asChild variant="outline">
+            <Link href="/dashboard">Back to Dashboard</Link>
+          </Button>
         </div>
       </div>
     )
@@ -80,8 +99,13 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
             {/* User Info */}
             <div className="flex items-center space-x-4">
               <span className="text-sm text-muted-foreground">
-                Welcome, {auth.user?.first_name}
+                Welcome, {user?.first_name || user?.full_name}
               </span>
+              {process.env.NODE_ENV === 'development' && user?.role !== 'instructor' && (
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                  DEV: {user?.role} role
+                </span>
+              )}
               <Button variant="outline" size="sm" asChild>
                 <Link href="/dashboard">Exit Studio</Link>
               </Button>
@@ -96,9 +120,9 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
           <nav className="p-4">
             <ul className="space-y-2">
               {navigationItems.map((item) => {
-                const isActive = pathname === item.href || 
+                const isActive = pathname === item.href ||
                   (item.href === '/studio' && pathname === '/studio')
-                
+
                 return (
                   <li key={item.href}>
                     <Button
