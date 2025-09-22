@@ -10,11 +10,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  CheckCircle, 
-  Loader2, 
-  PlayCircle, 
-  AlertCircle, 
+import {
+  CheckCircle,
+  Loader2,
+  PlayCircle,
+  AlertCircle,
   RefreshCw,
   BookOpen,
   Award,
@@ -32,7 +32,7 @@ export interface CompletionScreenProps {
   onRetry: () => void
 }
 
-type ActivationState = 
+type ActivationState =
   | 'activating'
   | 'success'
   | 'delay'
@@ -58,13 +58,13 @@ export function CompletionScreen({
     maxRetries: 3
   })
 
-  const isFree = course.price?.current_price === 0 || 
-                 course.price?.is_free
+  const isFree = course.price?.current_price === 0 ||
+    course.price?.is_free
 
   // Start activation process on component mount
   useEffect(() => {
-    if (enrollment.status === 'active' && enrollment.access_granted) {
-      // Already activated
+    if (enrollment.access_granted) {
+      // Already activated (check access_granted first, status might not be updated yet)
       setState(prev => ({
         ...prev,
         activationState: 'success',
@@ -81,10 +81,10 @@ export function CompletionScreen({
   }, [enrollment, course.slug])
 
   const activateAccess = async () => {
-    setState(prev => ({ 
-      ...prev, 
+    setState(prev => ({
+      ...prev,
       activationState: 'activating',
-      error: undefined 
+      error: undefined
     }))
 
     try {
@@ -133,14 +133,14 @@ export function CompletionScreen({
       return
     }
 
-    setState(prev => ({ 
-      ...prev, 
-      retryCount: prev.retryCount + 1 
+    setState(prev => ({
+      ...prev,
+      retryCount: prev.retryCount + 1
     }))
 
     try {
       const response = await enrollmentService.retryActivation(enrollment.id)
-      
+
       if (response.success && response.access_granted) {
         setState(prev => ({
           ...prev,
@@ -186,7 +186,7 @@ export function CompletionScreen({
                 <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                
+
                 <div>
                   <h2 className="text-2xl font-bold text-green-800 mb-2">
                     {isFree ? 'Đăng ký thành công!' : 'Thanh toán thành công!'}
@@ -238,7 +238,7 @@ export function CompletionScreen({
                 </div>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleStartLearning}
                 className="w-full"
                 size="lg"
@@ -270,7 +270,7 @@ export function CompletionScreen({
               <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                 <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
-              
+
               <div>
                 <h2 className="text-xl font-bold mb-2">
                   Đang kích hoạt quyền truy cập...
@@ -299,7 +299,7 @@ export function CompletionScreen({
             <Alert>
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Quá trình kích hoạt đang mất nhiều thời gian hơn bình thường. 
+                Quá trình kích hoạt đang mất nhiều thời gian hơn bình thường.
                 Điều này có thể do tải hệ thống cao.
               </AlertDescription>
             </Alert>
@@ -309,12 +309,12 @@ export function CompletionScreen({
                 Đang xử lý kích hoạt khóa học
               </h3>
               <p className="text-muted-foreground">
-                Hệ thống đang xử lý yêu cầu kích hoạt của bạn. 
+                Hệ thống đang xử lý yêu cầu kích hoạt của bạn.
                 Bạn có thể thử lại hoặc đợi thêm một chút.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button 
+                <Button
                   onClick={handleRetryActivation}
                   variant="outline"
                   disabled={state.retryCount >= state.maxRetries}
@@ -322,7 +322,7 @@ export function CompletionScreen({
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Thử lại ({state.maxRetries - state.retryCount} lần còn lại)
                 </Button>
-                
+
                 <Button onClick={handleContactSupport} variant="outline">
                   Liên hệ hỗ trợ
                 </Button>
@@ -348,7 +348,7 @@ export function CompletionScreen({
                 Không thể kích hoạt khóa học
               </h3>
               <p className="text-muted-foreground">
-                Đã xảy ra lỗi khi kích hoạt quyền truy cập khóa học. 
+                Đã xảy ra lỗi khi kích hoạt quyền truy cập khóa học.
                 Đừng lo lắng, việc thanh toán của bạn đã được xử lý thành công.
               </p>
 
@@ -364,7 +364,7 @@ export function CompletionScreen({
                     Bắt đầu lại
                   </Button>
                 )}
-                
+
                 <Button onClick={handleContactSupport} variant="outline">
                   Liên hệ hỗ trợ
                 </Button>

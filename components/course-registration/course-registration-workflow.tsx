@@ -29,11 +29,11 @@ export interface CourseRegistrationWorkflowProps {
   onSuccess?: (enrollmentId: string) => void
 }
 
-type WorkflowStep = 
+type WorkflowStep =
   | 'auth_check'
-  | 'registration_start' 
-  | 'registration_info' 
-  | 'payment' 
+  | 'registration_start'
+  | 'registration_info'
+  | 'payment'
   | 'completion'
   | 'error'
 
@@ -53,7 +53,7 @@ export function CourseRegistrationWorkflow({
 }: CourseRegistrationWorkflowProps) {
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
-  
+
   const [state, setState] = useState<WorkflowState>({
     step: 'auth_check',
     isProcessing: false
@@ -78,6 +78,18 @@ export function CourseRegistrationWorkflow({
   const checkAuthAndInitialize = async () => {
     if (!course) return
 
+    // Validate required course properties
+    if (!course.id || !course.slug) {
+      console.error('Course missing required properties:', { id: course.id, slug: course.slug })
+      setState(prev => ({
+        ...prev,
+        step: 'error',
+        error: 'Thông tin khóa học không hợp lệ. Vui lòng thử lại sau.',
+        isProcessing: false
+      }))
+      return
+    }
+
     setState(prev => ({ ...prev, isProcessing: true }))
 
     try {
@@ -92,7 +104,7 @@ export function CourseRegistrationWorkflow({
 
       // Check if user already has access to this course
       const accessCheck = await enrollmentService.checkCourseAccess(course.id.toString())
-      
+
       if (accessCheck.hasAccess && accessCheck.enrollmentStatus?.status === 'active') {
         // User already has access - redirect to first lesson
         const firstLessonUrl = `/courses/${course.slug}/lessons/1`
@@ -100,9 +112,9 @@ export function CourseRegistrationWorkflow({
         onClose()
         return
       }
-      
-      if (accessCheck.enrollmentStatus && 
-          ['payment_pending', 'enrolled', 'activating'].includes(accessCheck.enrollmentStatus.status)) {
+
+      if (accessCheck.enrollmentStatus &&
+        ['payment_pending', 'enrolled', 'activating'].includes(accessCheck.enrollmentStatus.status)) {
         // Continue with existing enrollment
         setState(prev => ({
           ...prev,
@@ -134,10 +146,10 @@ export function CourseRegistrationWorkflow({
 
   const handleRegistrationStart = () => {
     if (!course) return
-    
-    const isFree = course.price?.current_price === 0 || 
-                   course.price?.is_free
-    
+
+    const isFree = course.price?.current_price === 0 ||
+      course.price?.is_free
+
     if (isFree) {
       // For free courses, proceed directly to registration
       setState(prev => ({ ...prev, step: 'registration_info' }))
@@ -150,6 +162,18 @@ export function CourseRegistrationWorkflow({
   const handleRegistrationInfo = async (data: { fullName: string; email: string; discountCode?: string }) => {
     if (!course || !user) return
 
+    // Validate required course properties
+    if (!course.id) {
+      console.error('Course missing required id property:', course)
+      setState(prev => ({
+        ...prev,
+        step: 'error',
+        error: 'Thông tin khóa học không hợp lệ. Vui lòng thử lại sau.',
+        isProcessing: false
+      }))
+      return
+    }
+
     setState(prev => ({ ...prev, isProcessing: true }))
 
     try {
@@ -160,31 +184,61 @@ export function CourseRegistrationWorkflow({
         discount_code: data.discountCode
       })
 
+      console.log('Enrollment response received:', enrollmentResponse)
+
+      // Validate response structure
+      if (!enrollmentResponse || typeof enrollmentResponse !== 'object') {
+        throw new Error('Invalid registration response')
+      }
+
+      // Check if enrollment data exists
+      if (!enrollmentResponse.enrollment || !enrollmentResponse.enrollment.id) {
+        console.error('Invalid enrollment data structure:', enrollmentResponse)
+        throw new Error('Registration response missing enrollment data')
+      }
+
+      // Determine next step based on course type and payment requirement
+      let nextStep: WorkflowStep = 'completion'
+      if (enrollmentResponse.access_immediate) {
+        // Free course or immediate access
+        nextStep = 'completion'
+      } else if (enrollmentResponse.payment_required) {
+        // Paid course - proceed to payment
+        nextStep = 'payment'
+      } else {
+        // Course enrolled but needs activation
+        nextStep = 'completion'
+      }
+
+      // Single setState call to avoid render issues
       setState(prev => ({
         ...prev,
         enrollmentId: enrollmentResponse.enrollment.id,
         enrollmentStatus: enrollmentResponse.enrollment,
+        step: nextStep,
         isProcessing: false
       }))
 
-      // Determine next step based on course type and payment requirement
-      if (enrollmentResponse.access_immediate) {
-        // Free course or immediate access
-        setState(prev => ({ ...prev, step: 'completion' }))
-      } else if (enrollmentResponse.payment_required) {
-        // Paid course - proceed to payment
-        setState(prev => ({ ...prev, step: 'payment' }))
-      } else {
-        // Course enrolled but needs activation
-        setState(prev => ({ ...prev, step: 'completion' }))
-      }
-
     } catch (error) {
       console.error('Registration error:', error)
+
+      // Extract meaningful error message
+      let errorMessage = 'Đăng ký thất bại. Vui lòng thử lại.'
+
+      if (error instanceof Error) {
+        if (error.message.includes('Validation failed')) {
+          errorMessage = 'Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại.'
+        } else if (error.message.includes('Invalid')) {
+          errorMessage = 'Có lỗi xảy ra với dữ liệu đăng ký. Vui lòng thử lại.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+
       setState(prev => ({
         ...prev,
         step: 'error',
-        error: error instanceof Error ? error.message : 'Đăng ký thất bại. Vui lòng thử lại.',
+        error: errorMessage,
         isProcessing: false
       }))
     }
@@ -269,7 +323,7 @@ export function CourseRegistrationWorkflow({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
+
           {state.step !== 'error' && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm text-muted-foreground">
@@ -334,7 +388,7 @@ export function CourseRegistrationWorkflow({
                   {state.error}
                 </AlertDescription>
               </Alert>
-              
+
               <div className="flex justify-center space-x-3">
                 <Button onClick={handleRetry} variant="outline">
                   Thử lại

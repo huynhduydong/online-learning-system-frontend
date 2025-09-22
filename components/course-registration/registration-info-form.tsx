@@ -49,7 +49,7 @@ export function RegistrationInfoForm({
   isLoading
 }: RegistrationInfoFormProps) {
   const [showDiscountCode, setShowDiscountCode] = useState(false)
-  
+
   const {
     register,
     handleSubmit,
@@ -67,11 +67,11 @@ export function RegistrationInfoForm({
   })
 
   const watchedDiscountCode = watch('discountCode')
-  
-  const isFree = course.price?.current_price === 0 || 
-                 course.price?.is_free
 
-  const price = course.price?.current_price || 0
+  const isFree = course.price?.current_price === 0 ||
+    course.price?.is_free
+
+  const price = course.price?.current_price || course.price?.amount || 0
 
   const handleFormSubmit = async (data: RegistrationFormData) => {
     try {
@@ -248,7 +248,7 @@ export function RegistrationInfoForm({
             {/* Submit Actions */}
             <div className="space-y-4">
               <Separator />
-              
+
               <div className="flex flex-col sm:flex-row gap-3 justify-end">
                 <Button
                   type="button"
@@ -259,7 +259,7 @@ export function RegistrationInfoForm({
                 >
                   Quay lại
                 </Button>
-                
+
                 <Button
                   type="submit"
                   disabled={!isValid || isLoading}

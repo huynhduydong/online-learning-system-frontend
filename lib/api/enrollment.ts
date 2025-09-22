@@ -64,19 +64,73 @@ class EnrollmentService {
    */
   async startRegistration(data: EnrollmentRequest): Promise<EnrollmentResponse> {
     try {
+      console.log('Enrollment request data:', data)
+
       const response = await this.client.post<ApiResponse<EnrollmentResponse>>(
         '/enrollments/register',
         data
       )
 
-      if (response.success && response.data) {
-        return response.data as unknown as EnrollmentResponse
+      console.log('Raw enrollment response:', response)
+
+      if (response.success) {
+        // Handle the specific API response structure where enrollment data is in 'message'
+        let enrollmentData: any = null
+
+        if (response.message && typeof response.message === 'object') {
+          // Data is in response.message
+          enrollmentData = response.message
+        } else if (response.data && typeof response.data === 'object') {
+          // Fallback: data might be in response.data
+          enrollmentData = response.data
+        }
+
+        // Validate the response structure
+        if (!enrollmentData || typeof enrollmentData !== 'object') {
+          throw new Error('Invalid enrollment response structure')
+        }
+
+        // Check if it has the expected enrollment structure
+        if (enrollmentData.enrollment && enrollmentData.enrollment.id) {
+          return enrollmentData as EnrollmentResponse
+        }
+
+        // Check if it's double-wrapped (data.data structure)
+        if ('data' in enrollmentData && typeof enrollmentData.data === 'object') {
+          return enrollmentData.data as EnrollmentResponse
+        }
+
+        // If we reach here, the structure is not what we expected
+        console.error('Unexpected enrollment response structure:', enrollmentData)
+        throw new Error('Invalid enrollment response structure')
       }
 
-      throw new Error(response.error || 'Registration failed')
+      throw new Error(response.error || response.message || 'Registration failed')
     } catch (error) {
       console.error('Registration error:', error)
-      throw error
+
+      // Handle API client errors with detailed information
+      if (error instanceof Error && error.name === 'ApiClientError') {
+        const apiError = error as any
+        console.error('API Error details:', apiError.data)
+
+        // Extract validation details if available
+        if (apiError.data?.details) {
+          const validationErrors = Object.entries(apiError.data.details)
+            .map(([field, errors]) => `${field}: ${(errors as string[]).join(', ')}`)
+            .join('; ')
+          throw new Error(`Validation failed: ${validationErrors}`)
+        }
+
+        // Use the specific error message from API
+        const message = apiError.data?.error || apiError.data?.message || error.message
+        throw new Error(message)
+      }
+
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('Registration failed')
     }
   }
 
@@ -90,8 +144,22 @@ class EnrollmentService {
         data
       )
 
-      if (response.success && response.data) {
-        return response.data as unknown as EnrollmentStatus
+      console.log('Raw processPayment response:', response)
+
+      if (response.success) {
+        // Handle the specific API response structure - data might be in 'message' or 'data'
+        let enrollmentData: any = null
+
+        if (response.data && typeof response.data === 'object') {
+          enrollmentData = response.data
+        } else if (response.message && typeof response.message === 'object') {
+          enrollmentData = response.message
+        }
+
+        if (enrollmentData) {
+          console.log('Parsed payment result:', enrollmentData)
+          return enrollmentData as EnrollmentStatus
+        }
       }
 
       throw new Error(response.error || 'Payment processing failed')
@@ -110,8 +178,34 @@ class EnrollmentService {
         `/enrollments/${enrollmentId}/activate`
       )
 
-      if (response.success && response.data) {
-        return response.data as unknown as ActivationResponse
+      console.log('Raw activateEnrollment response:', response)
+
+      if (response.success) {
+        // Handle the specific API response structure
+        // For activation endpoint, the actual data is in 'message' field
+        let activationData: any = null
+
+        if (response.message && typeof response.message === 'object') {
+          // Primary: activation data is in message field
+          activationData = response.message
+        } else if (response.data && typeof response.data === 'object' && typeof response.data !== 'string') {
+          // Fallback: data field (but not if it's just a string like "Course access activated")
+          activationData = response.data
+        }
+
+        if (activationData) {
+          console.log('Parsed activation result:', activationData)
+          return activationData as ActivationResponse
+        }
+
+        // If we have success but no proper data structure, create a minimal response
+        if (response.success) {
+          console.log('Creating fallback activation response')
+          return {
+            success: true,
+            access_granted: true
+          } as ActivationResponse
+        }
       }
 
       throw new Error(response.error || 'Activation failed')
@@ -130,8 +224,22 @@ class EnrollmentService {
         `/enrollments/${enrollmentId}`
       )
 
-      if (response.success && response.data) {
-        return response.data as unknown as EnrollmentStatus
+      console.log('Raw getEnrollmentStatus response:', response)
+
+      if (response.success) {
+        // Handle the specific API response structure - data might be in 'message' or 'data'
+        let enrollmentData: any = null
+
+        if (response.data && typeof response.data === 'object') {
+          enrollmentData = response.data
+        } else if (response.message && typeof response.message === 'object') {
+          enrollmentData = response.message
+        }
+
+        if (enrollmentData) {
+          console.log('Parsed enrollment data:', enrollmentData)
+          return enrollmentData as EnrollmentStatus
+        }
       }
 
       throw new Error(response.error || 'Failed to get enrollment status')

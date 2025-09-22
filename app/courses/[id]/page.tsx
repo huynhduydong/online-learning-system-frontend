@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { Play, Clock, Users, Star, BookOpen, CheckCircle, PlayCircle, Award, Globe, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,14 +11,20 @@ import { coursesService } from "@/lib/api/courses"
 import { formatCurrency, formatDuration } from "@/lib/utils"
 import type { CourseDetails } from "@/lib/api/types"
 import Link from "next/link"
+import { CourseRegistrationWorkflow } from "@/components/course-registration"
 
 export default function CourseDetailPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const slug = params.id as string // Using id param but treating it as slug for backward compatibility
   const [activeTab, setActiveTab] = useState("overview")
   const [course, setCourse] = useState<CourseDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
+
+  // Check for register parameter
+  const shouldAutoOpenRegistration = searchParams.get('register') === 'true'
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -40,18 +46,27 @@ export default function CourseDetailPage() {
     }
   }, [slug])
 
+  // Auto-open registration workflow when register=true parameter is detected
+  useEffect(() => {
+    if (shouldAutoOpenRegistration && course && !isLoading) {
+      setIsRegistrationOpen(true)
+    }
+  }, [shouldAutoOpenRegistration, course, isLoading])
+
   const handleEnroll = async () => {
     if (!course) return
-    
-    try {
-      // TODO: Implement enrollment API call
-      console.log("Enrolling in course:", course.id)
-      // await enrollmentService.enrollInCourse(course.id)
-      alert("Đăng ký thành công! (Demo)")
-    } catch (error) {
-      console.error("Enrollment failed:", error)
-      alert("Đăng ký thất bại. Vui lòng thử lại.")
-    }
+    setIsRegistrationOpen(true)
+  }
+
+  const handleRegistrationClose = () => {
+    setIsRegistrationOpen(false)
+  }
+
+  const handleRegistrationSuccess = (enrollmentId: string) => {
+    setIsRegistrationOpen(false)
+    // Redirect to first lesson or dashboard
+    console.log("Registration successful:", enrollmentId)
+    // You can implement redirect logic here if needed
   }
 
   if (isLoading) {
@@ -87,16 +102,16 @@ export default function CourseDetailPage() {
               <Skeleton className="h-10 w-3/4 mb-4" />
               <Skeleton className="h-6 w-full mb-2" />
               <Skeleton className="h-6 w-2/3 mb-6" />
-              
+
               <div className="flex gap-6 mb-6">
                 <Skeleton className="h-6 w-24" />
                 <Skeleton className="h-6 w-24" />
                 <Skeleton className="h-6 w-24" />
               </div>
-              
+
               <Skeleton className="aspect-video w-full rounded-lg" />
             </div>
-            
+
             <div className="lg:col-span-1">
               <Card>
                 <CardHeader>
@@ -272,7 +287,7 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
               )}
-              
+
               {course.preview_video_url && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Button size="lg" className="rounded-full h-16 w-16">
@@ -351,11 +366,10 @@ export default function CourseDetailPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 {tab.label}
               </button>
@@ -462,7 +476,7 @@ export default function CourseDetailPage() {
                         {course.instructor?.bio && (
                           <p className="text-muted-foreground leading-relaxed">{course.instructor.bio}</p>
                         )}
-                        
+
                         <div className="flex items-center gap-6 mt-4">
                           {course.instructor?.total_students && (
                             <div className="text-center">
@@ -500,11 +514,10 @@ export default function CourseDetailPage() {
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-5 w-5 ${
-                                  i < Math.floor(course.rating.average || 0)
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-gray-300"
-                                }`}
+                                className={`h-5 w-5 ${i < Math.floor(course.rating.average || 0)
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                                  }`}
                               />
                             ))}
                           </div>
@@ -574,6 +587,14 @@ export default function CourseDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Course Registration Workflow */}
+      <CourseRegistrationWorkflow
+        course={course}
+        isOpen={isRegistrationOpen}
+        onClose={handleRegistrationClose}
+        onSuccess={handleRegistrationSuccess}
+      />
     </div>
   )
 }

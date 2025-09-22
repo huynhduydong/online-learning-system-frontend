@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,15 +25,19 @@ import { config } from '@/lib/config'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { login, isLoading, error, clearError, isAuthenticated } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
+
+  // Get return URL from search params
+  const returnUrl = searchParams.get('return') || '/dashboard'
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard')
+      router.push(decodeURIComponent(returnUrl))
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, returnUrl])
 
   // Form setup
   const form = useForm<LoginFormData>({
@@ -55,7 +59,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data)
-      router.push('/dashboard')
+      router.push(decodeURIComponent(returnUrl))
     } catch (error) {
       // Error is handled by the auth context
       console.error('Login error:', error)
@@ -79,8 +83,8 @@ export default function LoginPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-xl text-center">Đăng nhập</CardTitle>
             <CardDescription className="text-center">
-              Nhập email và mật khẩu của bạn 
-              </CardDescription>
+              Nhập email và mật khẩu của bạn
+            </CardDescription>
           </CardHeader>
 
           <CardContent>

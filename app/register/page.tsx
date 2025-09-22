@@ -8,14 +8,14 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { 
-  Eye, 
-  EyeOff, 
-  UserPlus, 
-  Mail, 
-  Lock, 
-  User, 
-  AlertCircle, 
+import {
+  Eye,
+  EyeOff,
+  UserPlus,
+  Mail,
+  Lock,
+  User,
+  AlertCircle,
   Loader2,
   GraduationCap,
   BookOpen,
@@ -37,7 +37,7 @@ import { config } from '@/lib/config'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { registerUser, isLoading, error, clearError, isAuthenticated } = useAuth()
+  const { register, isLoading, error, clearError, isAuthenticated } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -74,11 +74,11 @@ export default function RegisterPage() {
     try {
       // Remove confirmPassword and terms from the data sent to API
       const { confirmPassword, terms, ...registerData } = data
-      await registerUser(registerData)
-      
+      await register(registerData)
+
       // Show success message
       setIsSuccess(true)
-      
+
       // Redirect after a short delay to show success message
       setTimeout(() => {
         router.push('/login')
