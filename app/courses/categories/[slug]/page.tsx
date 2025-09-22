@@ -121,11 +121,6 @@ export default function CategoryCoursesPage({ }: CategoryCoursesPageProps) {
         </nav>
 
         <div className="flex items-center gap-3 mb-2">
-          {category?.icon && (
-            <div className="text-4xl">
-              {category.icon}
-            </div>
-          )}
           <h1 className="text-3xl font-bold">
             {category?.name || 'Khóa học'}
           </h1>

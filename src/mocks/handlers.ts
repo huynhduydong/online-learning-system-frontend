@@ -409,7 +409,7 @@ export const handlers = [
   http.get("/api/courses", () => {
     return HttpResponse.json(mockCourses)
   }),
-  
+
   // External API handlers for localhost:5000
   http.get("http://localhost:5000/api/courses", () => {
     return HttpResponse.json(mockCourses)
@@ -444,6 +444,12 @@ export const handlers = [
     return HttpResponse.json(mockCourses.slice(0, 1)) // Return first course as enrolled
   }),
 
+  // Instructor course management endpoints - DISABLED for real API integration
+  // These endpoints now use real backend APIs instead of MSW mocking
+  
+  // NOTE: MSW handlers for /api/instructor/* are disabled
+  // Real API calls will go to http://localhost:5000/api/instructor/*
+
   // Auth endpoints
   http.post("/api/auth/login", async ({ request }) => {
     const { email, password } = (await request.json()) as { email: string; password: string }
@@ -452,20 +458,24 @@ export const handlers = [
 
     // Mock authentication - accept any valid email/password combo
     if (email && password && email.includes('@') && password.length >= 6) {
+      // Determine role based on email for development
+      const role = email.includes('instructor') || email.includes('teacher') ? 'instructor' : 'student'
+      const userId = role === 'instructor' ? 117 : 1
+      
       return HttpResponse.json({
         success: true,
         message: "Login successful",
         access_token: "mock-access-token-123",
-        refresh_token: "mock-refresh-token-456", 
+        refresh_token: "mock-refresh-token-456",
         expires_in: 3600,
         remember_me: false,
         user: {
-          id: 1,
+          id: userId,
           email: email,
-          first_name: "Test",
-          last_name: "User",
-          full_name: "Test User",
-          role: "student",
+          first_name: role === 'instructor' ? 'Instructor' : 'Test',
+          last_name: role === 'instructor' ? 'Demo' : 'User',
+          full_name: role === 'instructor' ? 'Instructor Demo' : 'Test User',
+          role: role,
           is_active: true,
           is_verified: true,
           profile_image: "/user-avatar.jpg",
@@ -488,7 +498,7 @@ export const handlers = [
   // External auth endpoint  
   http.post("http://localhost:5000/api/auth/login", async ({ request }) => {
     console.log('🔐 MSW intercepted POST http://localhost:5000/api/auth/login')
-    
+
     let requestBody
     try {
       requestBody = await request.json()
@@ -508,20 +518,25 @@ export const handlers = [
     // Mock authentication - accept any valid email/password combo
     if (email && password && email.includes('@') && password.length >= 6) {
       console.log('✅ MSW External Login SUCCESS!')
+      
+      // Determine role based on email for development
+      const role = email.includes('instructor') || email.includes('teacher') ? 'instructor' : 'student'
+      const userId = role === 'instructor' ? 117 : 1
+      
       const response = {
         success: true,
-        message: "Login successful", 
+        message: "Login successful",
         access_token: "mock-access-token-123",
         refresh_token: "mock-refresh-token-456",
         expires_in: 3600,
         remember_me: false,
         user: {
-          id: 1,
+          id: userId,
           email: email,
-          first_name: "Test",
-          last_name: "User", 
-          full_name: "Test User",
-          role: "student",
+          first_name: role === 'instructor' ? 'Instructor' : 'Test',
+          last_name: role === 'instructor' ? 'Demo' : 'User',
+          full_name: role === 'instructor' ? 'Instructor Demo' : 'Test User',
+          role: role,
           is_active: true,
           is_verified: true,
           profile_image: "/user-avatar.jpg",
@@ -539,7 +554,7 @@ export const handlers = [
     console.log('💡 Requirements: email with @ and password ≥6 chars')
     return HttpResponse.json({
       success: false,
-      error: "Invalid credentials", 
+      error: "Invalid credentials",
       message: "Email or password is incorrect"
     }, { status: 401 })
   }),
@@ -613,7 +628,7 @@ export const handlers = [
             rarity: "common",
           },
           {
-            id: "achievement-2", 
+            id: "achievement-2",
             title: "Week Streak",
             description: "Maintained a 7-day learning streak",
             icon: "🔥",
@@ -711,7 +726,7 @@ export const handlers = [
             rarity: "common",
           },
           {
-            id: "achievement-2", 
+            id: "achievement-2",
             title: "Week Streak",
             description: "Maintained a 7-day learning streak",
             icon: "🔥",
@@ -770,6 +785,242 @@ export const handlers = [
       success: true,
       message: "Test endpoint working",
       receivedData: body
+    })
+  }),
+
+  // Course Enrollment Endpoints
+  http.post("/api/enrollments/register", async ({ request }) => {
+    const body = await request.json() as { course_id: string; full_name: string; email: string; discount_code?: string }
+    console.log('MSW Course Registration:', body)
+
+    // Mock enrollment creation
+    const enrollmentId = `uuid-${Date.now()}`
+    const courseId = body.course_id
+
+    // Simulate course lookup to determine if it's free
+    const course = mockCourses.find(c => c.id.toString() === courseId)
+    const isFree = course?.price?.current_price === 0 || course?.price?.is_free
+
+    const enrollment = {
+      id: enrollmentId,
+      course_id: courseId,
+      user_id: 123,  // number as per backend implementation
+      status: isFree ? 'enrolled' : 'payment_pending',
+      payment_status: isFree ? 'completed' : 'pending',
+      enrollment_date: new Date().toISOString(),
+      activation_date: isFree ? new Date().toISOString() : null,
+      payment_amount: course?.price?.current_price || 0,
+      discount_applied: body.discount_code ? 50000 : 0, // 50k VND discount if code provided
+      access_granted: isFree,
+      full_name: body.full_name,
+      email: body.email,
+      activation_attempts: 0,
+      max_retries: 3
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: "Registration started successfully",
+      data: {
+        enrollment,
+        payment_required: !isFree,
+        payment_url: isFree ? undefined : `/payment/process/${enrollmentId}`,
+        access_immediate: isFree
+      }
+    })
+  }),
+
+  http.post("/api/enrollments/payment", async ({ request }) => {
+    const body = await request.json() as { enrollment_id: string; payment_method: string; payment_details?: any }
+    console.log('MSW Payment Processing:', body)
+
+    // Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // 80% success rate for demo
+    const paymentSuccess = Math.random() > 0.2
+
+    const updatedEnrollment = {
+      id: body.enrollment_id,
+      course_id: '1',
+      user_id: 123,
+      status: paymentSuccess ? 'enrolled' : 'payment_failed',
+      payment_status: paymentSuccess ? 'completed' : 'failed',
+      enrollment_date: new Date().toISOString(),
+      activation_date: paymentSuccess ? new Date().toISOString() : null,
+      payment_amount: 299000,
+      discount_applied: 0,
+      access_granted: paymentSuccess,
+      full_name: "Test User",
+      email: "test@example.com",
+      transaction_id: `txn_${Date.now()}`,
+      payment_method: body.payment_method
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: paymentSuccess ? "Payment processed successfully" : "Payment failed",
+      data: updatedEnrollment
+    })
+  }),
+
+  http.post("/api/enrollments/:enrollmentId/activate", async ({ params }) => {
+    const { enrollmentId } = params
+    console.log('MSW Course Activation:', enrollmentId)
+
+    // Simulate activation delay
+    await new Promise(resolve => setTimeout(resolve, 1500))
+
+    // 90% success rate for activation
+    const activationSuccess = Math.random() > 0.1
+
+    return HttpResponse.json({
+      success: true,
+      message: activationSuccess ? "Course access activated" : "Activation in progress",
+      data: {
+        success: activationSuccess,
+        access_granted: activationSuccess,
+        first_lesson_url: activationSuccess ? '/courses/react-basics/lessons/1' : null,
+        retry_available: !activationSuccess,
+        activation_time: activationSuccess ? new Date().toISOString() : undefined,
+        estimated_completion: !activationSuccess ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : undefined
+      }
+    })
+  }),
+
+  http.get("/api/enrollments/:enrollmentId", async ({ params }) => {
+    const { enrollmentId } = params
+    console.log('MSW Get Enrollment Status:', enrollmentId)
+
+    return HttpResponse.json({
+      success: true,
+      message: "Enrollment status retrieved",
+      data: {
+        id: enrollmentId,
+        course_id: '1',
+        user_id: 123,
+        status: 'active',
+        payment_status: 'completed',
+        enrollment_date: new Date().toISOString(),
+        activation_date: new Date().toISOString(),
+        payment_amount: 299000,
+        discount_applied: 0,
+        access_granted: true,
+        full_name: "Test User",
+        email: "test@example.com",
+        course_title: "React Fundamentals",
+        course_slug: "react-fundamentals"
+      }
+    })
+  }),
+
+  http.get("/api/enrollments/check-access/:courseId", async ({ params }) => {
+    const { courseId } = params
+    console.log('MSW Check Course Access:', courseId)
+
+    // For demo, assume user doesn't have access to most courses
+    const hasAccess = Math.random() > 0.8
+
+    return HttpResponse.json({
+      success: true,
+      message: hasAccess ? "Course access checked" : "No access to course",
+      data: {
+        hasAccess,
+        enrollmentStatus: hasAccess ? {
+          id: 'demo-enrollment',
+          course_id: courseId,
+          user_id: 123,
+          status: 'active',
+          payment_status: 'completed',
+          enrollment_date: new Date().toISOString(),
+          activation_date: new Date().toISOString(),
+          payment_amount: 0,
+          discount_applied: 0,
+          access_granted: true,
+          full_name: "Test User",
+          email: "test@example.com"
+        } : null,
+        nextLessonUrl: hasAccess ? `/courses/${courseId}/lessons/1` : undefined,
+        canDownloadCertificate: hasAccess ? false : undefined,
+        reasonCode: !hasAccess ? "NOT_ENROLLED" : undefined,
+        message: !hasAccess ? "You need to enroll in this course to access the content" : undefined
+      }
+    })
+  }),
+
+  http.get("/api/enrollments/my-courses", async ({ request }) => {
+    console.log('MSW Get User Enrollments')
+
+    const url = new URL(request.url)
+    const page = parseInt(url.searchParams.get('page') || '1')
+    const limit = parseInt(url.searchParams.get('limit') || '10')
+
+    return HttpResponse.json({
+      success: true,
+      message: "User enrollments retrieved",
+      data: [
+        {
+          id: 'enrollment-1',
+          course_id: '1',
+          user_id: 123,
+          status: 'active',
+          payment_status: 'completed',
+          enrollment_date: '2024-01-01T00:00:00Z',
+          activation_date: '2024-01-01T00:00:00Z',
+          payment_amount: 299000,
+          discount_applied: 0,
+          access_granted: true,
+          full_name: "Test User",
+          email: "test@example.com",
+          course: {
+            id: '1',
+            title: 'React Fundamentals',
+            slug: 'react-fundamentals',
+            thumbnail_url: '/react-course.jpg',
+            difficulty_level: 'beginner',
+            instructor: {
+              id: 'instructor-1',
+              name: 'Nguyễn Văn A',
+              avatar: '/instructor-avatar.jpg'
+            }
+          },
+          progress: {
+            completed_lessons: 5,
+            total_lessons: 20,
+            percentage: 25,
+            last_accessed: new Date().toISOString(),
+            total_time_spent: 1800
+          }
+        }
+      ],
+      pagination: {
+        current_page: page,
+        total_pages: 1,
+        total_items: 1,
+        per_page: limit
+      }
+    })
+  }),
+
+  http.post("/api/enrollments/:enrollmentId/retry-activation", async ({ params }) => {
+    const { enrollmentId } = params
+    console.log('MSW Retry Activation:', enrollmentId)
+
+    // Higher success rate on retry
+    const retrySuccess = Math.random() > 0.05
+
+    return HttpResponse.json({
+      success: true,
+      message: retrySuccess ? "Retry activation completed" : "Retry activation failed",
+      data: {
+        success: retrySuccess,
+        access_granted: retrySuccess,
+        first_lesson_url: retrySuccess ? '/courses/react-basics/lessons/1' : null,
+        retry_available: !retrySuccess,
+        activation_time: retrySuccess ? new Date().toISOString() : undefined,
+        max_retries_reached: !retrySuccess ? false : undefined,
+        next_retry_available_at: !retrySuccess ? new Date(Date.now() + 15 * 60 * 1000).toISOString() : undefined
+      }
     })
   }),
 ]

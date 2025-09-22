@@ -2,10 +2,11 @@
 
 import { Star, Clock, Users, BookOpen } from "lucide-react"
 import Link from "next/link"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CourseRegistrationWorkflow } from "@/components/course-registration"
 // Helper functions
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('vi-VN', {
@@ -17,7 +18,7 @@ function formatCurrency(amount: number): string {
 function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
-  
+
   if (hours === 0) {
     return `${remainingMinutes}m`
   } else if (remainingMinutes === 0) {
@@ -65,7 +66,8 @@ export function CourseCard({
   onEnroll
 }: CourseCardNewProps) {
   const course = useSafeCourse(rawCourse)
-  
+  const [showRegistration, setShowRegistration] = useState(false)
+
   // Guard clause - nếu course không tồn tại thì return null
   if (!course) {
     console.log('CourseCard: course is null/undefined')
@@ -75,7 +77,22 @@ export function CourseCard({
   const handleEnroll = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // Open registration workflow
+    setShowRegistration(true)
+
+    // Also call legacy onEnroll for backward compatibility
     onEnroll?.(course?.id?.toString() || '')
+  }
+
+  const handleRegistrationClose = () => {
+    setShowRegistration(false)
+  }
+
+  const handleRegistrationSuccess = (enrollmentId: string) => {
+    console.log('Registration successful:', enrollmentId)
+    setShowRegistration(false)
+    // Could trigger a refresh of course status or show success message
   }
 
   const shouldShowRating = useMemo(() => {
@@ -85,173 +102,193 @@ export function CourseCard({
 
   if (variant === 'horizontal') {
     return (
-      <Link href={`/courses/${course?.slug || ''}`} className="block">
-        <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
-          <div className="flex">
-            {/* Thumbnail */}
-            <div className="w-48 h-32 bg-muted relative overflow-hidden flex-shrink-0">
-              <img
-                src={course.thumbnail_url || '/placeholder.jpg'}
-                alt={course.title || 'Course thumbnail'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <Badge className="absolute top-2 right-2 bg-white/90 text-gray-900 hover:bg-white text-xs">
-                {course?.difficulty_level === 'beginner' ? 'Cơ bản' : 
-                 course?.difficulty_level === 'intermediate' ? 'Trung cấp' : 'Nâng cao'}
-              </Badge>
-              {(course.price?.current === 0 || course.price?.current_price === 0 || course.price?.is_free) && (
-                <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600 text-xs">
-                  Miễn phí
+      <>
+        <Link href={`/courses/${course?.slug || ''}`} className="block">
+          <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
+            <div className="flex">
+              {/* Thumbnail */}
+              <div className="w-48 h-32 bg-muted relative overflow-hidden flex-shrink-0">
+                <img
+                  src={course.thumbnail_url || '/placeholder.jpg'}
+                  alt={course.title || 'Course thumbnail'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <Badge className="absolute top-2 right-2 bg-white/90 text-gray-900 hover:bg-white text-xs">
+                  {course?.difficulty_level === 'beginner' ? 'Cơ bản' :
+                    course?.difficulty_level === 'intermediate' ? 'Trung cấp' : 'Nâng cao'}
                 </Badge>
-              )}
-            </div>
+                {(course.price?.current_price === 0 || course.price?.is_free) && (
+                  <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600 text-xs">
+                    Miễn phí
+                  </Badge>
+                )}
+              </div>
 
-            {/* Content */}
-            <div className="flex-1 p-4">
-              <div className="flex justify-between h-full">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-                    {course?.title || 'Untitled Course'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {course?.short_description || 'No description available'}
-                  </p>
+              {/* Content */}
+              <div className="flex-1 p-4">
+                <div className="flex justify-between h-full">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                      {course?.title || 'Untitled Course'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                      {course?.short_description || 'No description available'}
+                    </p>
 
-                  <div className="flex items-center space-x-2 mb-3">
-                    <span className="text-sm text-muted-foreground font-medium">
-                      {course?.instructor?.name || 'Unknown Instructor'}
-                    </span>
-                  </div>
+                    <div className="flex items-center space-x-2 mb-3">
+                      <span className="text-sm text-muted-foreground font-medium">
+                        {course?.instructor?.name || 'Unknown Instructor'}
+                      </span>
+                    </div>
 
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    {shouldShowRating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{course.rating?.average || 0}</span>
-                         <span className="text-xs">({course.rating?.count || course.rating?.total_ratings || 0})</span>
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      {shouldShowRating && (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">{course.rating?.average || 0}</span>
+                          <span className="text-xs">({course.rating?.count || course.rating?.total_ratings || 0})</span>
+                        </div>
+                      )}
+                      <div className="flex items-center space-x-1">
+                        <Users className="h-4 w-4" />
+                        <span>{course.stats?.students_count?.toLocaleString() || 0}</span>
                       </div>
-                    )}
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4" />
-                      <span>{course.stats?.students_count?.toLocaleString() || 0}</span>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex flex-col justify-between items-end ml-4">
-                  <div className="text-right">
-                    {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? (
-                      <div className="text-lg font-bold text-green-600">Miễn phí</div>
-                    ) : (
-                      <>
-                        <div className="text-lg font-bold">{formatCurrency(course?.price?.current || course?.price?.current_price || course?.price?.amount || 0)}</div>
-                        {(course?.price?.original || course?.price?.original_price) && (course?.price?.original || course?.price?.original_price || 0) > (course?.price?.current || course?.price?.current_price || course?.price?.amount || 0) && (
-                          <div className="text-sm text-muted-foreground line-through">
-                            {formatCurrency(course?.price?.original || course?.price?.original_price || 0)}
-                          </div>
-                        )}
-                      </>
-                    )}
+                  <div className="flex flex-col justify-between items-end ml-4">
+                    <div className="text-right">
+                      {(course?.price?.current_price === 0 || course?.price?.is_free) ? (
+                        <div className="text-lg font-bold text-green-600">Miễn phí</div>
+                      ) : (
+                        <>
+                          <div className="text-lg font-bold">{formatCurrency(course?.price?.current_price || 0)}</div>
+                          {course?.price?.original_price && course?.price?.original_price > (course?.price?.current_price || 0) && (
+                            <div className="text-sm text-muted-foreground line-through">
+                              {formatCurrency(course?.price?.original_price || 0)}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    <Button
+                      size="sm"
+                      onClick={handleEnroll}
+                      className="mt-2"
+                    >
+                      {(course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
+                    </Button>
                   </div>
-
-                  <Button
-                    size="sm"
-                    onClick={handleEnroll}
-                    className="mt-2"
-                  >
-                    {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
-                  </Button>
                 </div>
               </div>
             </div>
-          </div>
-        </Card>
-      </Link>
+          </Card>
+        </Link>
+
+        {/* Course Registration Workflow */}
+        <CourseRegistrationWorkflow
+          course={course}
+          isOpen={showRegistration}
+          onClose={handleRegistrationClose}
+          onSuccess={handleRegistrationSuccess}
+        />
+      </>
     )
   }
 
   // Vertical variant (default)
   return (
-    <Link href={`/courses/${course?.slug || ''}`} className="block">
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
-        <div className="aspect-video bg-muted relative overflow-hidden">
-          <img
-            src={course?.thumbnail_url || '/placeholder.jpg'}
-            alt={course?.title || 'Course thumbnail'}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          <Badge className="absolute top-2 right-2 bg-white/90 text-gray-900 hover:bg-white">
-            {course?.difficulty_level === 'beginner' ? 'Cơ bản' : 
-             course?.difficulty_level === 'intermediate' ? 'Trung cấp' : 'Nâng cao'}
-          </Badge>
-          {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) && (
-            <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
-              Miễn phí
+    <>
+      <Link href={`/courses/${course?.slug || ''}`} className="block">
+        <Card className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
+          <div className="aspect-video bg-muted relative overflow-hidden">
+            <img
+              src={course?.thumbnail_url || '/placeholder.jpg'}
+              alt={course?.title || 'Course thumbnail'}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <Badge className="absolute top-2 right-2 bg-white/90 text-gray-900 hover:bg-white">
+              {course?.difficulty_level === 'beginner' ? 'Cơ bản' :
+                course?.difficulty_level === 'intermediate' ? 'Trung cấp' : 'Nâng cao'}
             </Badge>
-          )}
-        </div>
-
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle className="text-lg line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-                {course?.title || 'Untitled Course'}
-              </CardTitle>
-              <CardDescription className="line-clamp-2 text-sm">
-                {course?.short_description || 'No description available'}
-              </CardDescription>
-            </div>
+            {(course?.price?.current_price === 0 || course?.price?.is_free) && (
+              <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
+                Miễn phí
+              </Badge>
+            )}
           </div>
 
-          <div className="flex items-center space-x-2 mt-3">
-            <span className="text-sm text-muted-foreground font-medium">
-              {course?.instructor?.name || 'Unknown Instructor'}
-            </span>
-          </div>
-        </CardHeader>
-
-        <CardContent className="pt-0">
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-            <div className="flex items-center space-x-4">
-              {shouldShowRating && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{course.rating?.average || 0}</span>
-                   <span className="text-xs">({course.rating?.count || course.rating?.total_ratings || 0})</span>
-                </div>
-              )}
-              <div className="flex items-center space-x-1">
-                <Users className="h-4 w-4" />
-                <span>{course.stats?.students_count?.toLocaleString() || 0}</span>
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <CardTitle className="text-lg line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                  {course?.title || 'Untitled Course'}
+                </CardTitle>
+                <CardDescription className="line-clamp-2 text-sm">
+                  {course?.short_description || 'No description available'}
+                </CardDescription>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? (
-                <span className="text-lg font-bold text-green-600">Miễn phí</span>
-              ) : (
-                <>
-                  <span className="text-lg font-bold">{formatCurrency(course?.price?.current || course?.price?.current_price || course?.price?.amount || 0)}</span>
-                  {(course?.price?.original || course?.price?.original_price) && (course?.price?.original || course?.price?.original_price || 0) > (course?.price?.current || course?.price?.current_price || course?.price?.amount || 0) && (
-                    <span className="text-sm text-muted-foreground line-through">
-                      {formatCurrency(course?.price?.original || course?.price?.original_price || 0)}
-                    </span>
-                  )}
-                </>
-              )}
+            <div className="flex items-center space-x-2 mt-3">
+              <span className="text-sm text-muted-foreground font-medium">
+                {course?.instructor?.name || 'Unknown Instructor'}
+              </span>
             </div>
-            <Button
-              size="sm"
-              onClick={handleEnroll}
-            >
-              {(course?.price?.current === 0 || course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+          </CardHeader>
+
+          <CardContent className="pt-0">
+            <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+              <div className="flex items-center space-x-4">
+                {shouldShowRating && (
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="font-medium">{course.rating?.average || 0}</span>
+                    <span className="text-xs">({course.rating?.count || course.rating?.total_ratings || 0})</span>
+                  </div>
+                )}
+                <div className="flex items-center space-x-1">
+                  <Users className="h-4 w-4" />
+                  <span>{course.stats?.students_count?.toLocaleString() || 0}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                {(course?.price?.current_price === 0 || course?.price?.is_free) ? (
+                  <span className="text-lg font-bold text-green-600">Miễn phí</span>
+                ) : (
+                  <>
+                    <span className="text-lg font-bold">{formatCurrency(course?.price?.current_price || 0)}</span>
+                    {course?.price?.original_price && course?.price?.original_price > (course?.price?.current_price || 0) && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        {formatCurrency(course?.price?.original_price || 0)}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+              <Button
+                size="sm"
+                onClick={handleEnroll}
+              >
+                {(course?.price?.current_price === 0 || course?.price?.is_free) ? 'Học ngay' : 'Đăng ký'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
+      {/* Course Registration Workflow */}
+      <CourseRegistrationWorkflow
+        course={course}
+        isOpen={showRegistration}
+        onClose={handleRegistrationClose}
+        onSuccess={handleRegistrationSuccess}
+      />
+    </>
   )
 }
 
@@ -364,8 +401,8 @@ export function LegacyCourseCard({
                 </div>
               )}
             </div>
-            <Button 
-              className="w-full" 
+            <Button
+              className="w-full"
               variant={isFree ? "secondary" : "default"}
               onClick={handleEnroll}
             >
