@@ -311,7 +311,7 @@ export default function LessonPage() {
                 {/* Video Player */}
                 <div className="bg-black aspect-video">
                     <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-                        {currentLesson.contents?.find(c => c.file_url && c.file_url.includes('video')) ? (
+                        {currentLesson.contents?.find(c => c.content_type && c.content_type.startsWith('video/')) ? (
                             <div className="text-center text-white">
                                 <Play className="h-16 w-16 mx-auto mb-4" />
                                 <p>Video Player Placeholder</p>
