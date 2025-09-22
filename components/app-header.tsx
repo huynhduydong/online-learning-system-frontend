@@ -7,6 +7,7 @@ import { Search, Menu, User, Bell, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/contexts/auth-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,7 +71,7 @@ const defaultNavItems: NavItem[] = [
 export function AppHeader({
   className,
   navItems,
-  user,
+  user: userProp,
   onSearch,
   showSearch = true,
   showNotifications = true,
@@ -79,7 +80,34 @@ export function AppHeader({
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isSearchFocused, setIsSearchFocused] = React.useState(false)
 
+  // Use auth context for user data and authentication
+  const { user: authUser, logout, isAuthenticated } = useAuth()
+
+  // Prefer auth context user over props
+  const user = authUser || userProp
+
+  // Helper functions for safe property access
+  const getUserName = () => {
+    if (authUser) return authUser.full_name || `${authUser.first_name} ${authUser.last_name}`.trim()
+    return userProp?.name || 'User'
+  }
+
+  const getUserAvatar = () => {
+    if (authUser) return authUser.profile_image || undefined
+    return userProp?.avatar
+  }
+
   const finalNavItems = navItems || defaultNavItems
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      // Redirect to home page after logout
+      window.location.href = '/'
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -211,31 +239,35 @@ export function AppHeader({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={getUserAvatar()} alt={getUserName()} />
+                      <AvatarFallback>{getUserName().charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-sm font-medium leading-none">{getUserName()}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Hồ sơ</span>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/profile">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Hồ sơ</span>
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Cài đặt</span>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Cài đặt</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Đăng xuất</span>
                   </DropdownMenuItem>

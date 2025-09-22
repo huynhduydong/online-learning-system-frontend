@@ -56,16 +56,18 @@ export default function LessonPage() {
         currentLesson,
         nextLesson,
         previousLesson,
+        currentModule,
         isLoading,
         error,
         isMarkingComplete,
+        isTrackingProgress,
         markComplete,
         trackProgress,
         refreshData
     } = useLesson({ courseSlug, lessonId })
 
     const handleMarkComplete = async () => {
-        if (!currentLesson || currentLesson.is_completed) return
+        if (!currentLesson || currentLesson.progress.is_completed) return
 
         try {
             await markComplete()
@@ -79,10 +81,13 @@ export default function LessonPage() {
         setSidebarOpen(false)
     }
 
-    const formatDuration = (seconds: number) => {
-        const mins = Math.floor(seconds / 60)
-        const secs = seconds % 60
-        return `${mins}:${secs.toString().padStart(2, '0')}`
+    const formatDuration = (minutes: number) => {
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        if (hours > 0) {
+            return `${hours}h ${mins}m`
+        }
+        return `${mins}m`
     }
 
     const formatFileSize = (bytes: number) => {
@@ -133,48 +138,72 @@ export default function LessonPage() {
                 <SheetContent side="left" className="w-80 p-0">
                     <div className="flex flex-col h-full">
                         <div className="p-4 border-b">
-                            <h3 className="font-semibold">{course.title}</h3>
+                            <h3 className="font-semibold">{course.course.title}</h3>
                             <p className="text-sm text-muted-foreground">
-                                {course.completed_lessons}/{course.total_lessons} bài học
+                                {course.progress.completed_lessons}/{course.progress.total_lessons} bài học
                             </p>
                             <Progress
-                                value={(course.completed_lessons / course.total_lessons) * 100}
+                                value={course.progress.completion_percentage}
                                 className="mt-2"
                             />
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4">
-                            <div className="space-y-2">
-                                {course.lessons.map((lesson, index) => (
-                                    <div
-                                        key={lesson.id}
-                                        className={`p-3 rounded-lg border cursor-pointer transition-colors ${lesson.id === currentLesson.id
-                                            ? 'border-primary bg-primary/5'
-                                            : lesson.is_locked
-                                                ? 'border-muted bg-muted/20 cursor-not-allowed opacity-60'
-                                                : 'border-border hover:border-primary/50'
-                                            }`}
-                                        onClick={() => !lesson.is_locked && navigateToLesson(lesson.id)}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex-shrink-0">
-                                                {lesson.is_completed ? (
-                                                    <CheckCircle className="h-5 w-5 text-green-600" />
-                                                ) : lesson.is_locked ? (
-                                                    <div className="h-5 w-5 rounded-full border-2 border-muted-foreground bg-muted" />
-                                                ) : (
-                                                    <div className="h-5 w-5 rounded-full border-2 border-primary" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-sm line-clamp-2">{lesson.title}</p>
-                                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                                    <Clock className="h-3 w-3" />
-                                                    <span>{formatDuration(lesson.duration)}</span>
-                                                    <span>•</span>
-                                                    <span>Bài {lesson.order}</span>
+                            <div className="space-y-4">
+                                {course.modules.map((module) => (
+                                    <div key={module.id}>
+                                        <h4 className="font-semibold text-sm mb-2 text-primary">
+                                            {module.title}
+                                        </h4>
+                                        <div className="space-y-2 pl-2">
+                                            {module.lessons.map((lesson) => (
+                                                <div
+                                                    key={lesson.id}
+                                                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${lesson.id === currentLesson?.id
+                                                        ? 'border-primary bg-primary/5'
+                                                        : lesson.progress.status === 'not_started' && !lesson.is_preview
+                                                            ? 'border-muted bg-muted/20 cursor-not-allowed opacity-60'
+                                                            : 'border-border hover:border-primary/50'
+                                                        }`}
+                                                    onClick={() => (lesson.is_preview || lesson.progress.status !== 'not_started') && navigateToLesson(lesson.id.toString())}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex-shrink-0">
+                                                            {lesson.progress.is_completed ? (
+                                                                <CheckCircle className="h-5 w-5 text-green-600" />
+                                                            ) : lesson.progress.status === 'in_progress' ? (
+                                                                <div className="h-5 w-5 rounded-full border-2 border-primary bg-primary/20" />
+                                                            ) : lesson.is_preview ? (
+                                                                <div className="h-5 w-5 rounded-full border-2 border-primary" />
+                                                            ) : (
+                                                                <div className="h-5 w-5 rounded-full border-2 border-muted-foreground bg-muted" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-medium text-sm line-clamp-2">{lesson.title}</p>
+                                                                {lesson.is_preview && (
+                                                                    <Badge variant="secondary" className="text-xs">
+                                                                        Xem trước
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                                                <Clock className="h-3 w-3" />
+                                                                <span>{formatDuration(lesson.duration_minutes)}</span>
+                                                                <span>•</span>
+                                                                <span>Bài {lesson.sort_order}</span>
+                                                                {lesson.progress.completion_percentage > 0 && lesson.progress.completion_percentage < 100 && (
+                                                                    <>
+                                                                        <span>•</span>
+                                                                        <span>{Math.round(lesson.progress.completion_percentage)}%</span>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            ))}
                                         </div>
                                     </div>
                                 ))}
@@ -192,48 +221,72 @@ export default function LessonPage() {
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Quay lại khóa học
                         </Button>
-                        <h3 className="font-semibold">{course.title}</h3>
+                        <h3 className="font-semibold">{course.course.title}</h3>
                         <p className="text-sm text-muted-foreground">
-                            {course.completed_lessons}/{course.total_lessons} bài học
+                            {course.progress.completed_lessons}/{course.progress.total_lessons} bài học
                         </p>
                         <Progress
-                            value={(course.completed_lessons / course.total_lessons) * 100}
+                            value={course.progress.completion_percentage}
                             className="mt-2"
                         />
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4">
-                        <div className="space-y-2">
-                            {course.lessons.map((lesson, index) => (
-                                <div
-                                    key={lesson.id}
-                                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${lesson.id === currentLesson.id
-                                        ? 'border-primary bg-primary/5'
-                                        : lesson.is_locked
-                                            ? 'border-muted bg-muted/20 cursor-not-allowed opacity-60'
-                                            : 'border-border hover:border-primary/50'
-                                        }`}
-                                    onClick={() => !lesson.is_locked && navigateToLesson(lesson.id)}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex-shrink-0">
-                                            {lesson.is_completed ? (
-                                                <CheckCircle className="h-5 w-5 text-green-600" />
-                                            ) : lesson.is_locked ? (
-                                                <div className="h-5 w-5 rounded-full border-2 border-muted-foreground bg-muted" />
-                                            ) : (
-                                                <div className="h-5 w-5 rounded-full border-2 border-primary" />
-                                            )}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-sm line-clamp-2">{lesson.title}</p>
-                                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                                <Clock className="h-3 w-3" />
-                                                <span>{formatDuration(lesson.duration)}</span>
-                                                <span>•</span>
-                                                <span>Bài {lesson.order}</span>
+                        <div className="space-y-4">
+                            {course.modules.map((module) => (
+                                <div key={module.id}>
+                                    <h4 className="font-semibold text-sm mb-2 text-primary">
+                                        {module.title}
+                                    </h4>
+                                    <div className="space-y-2 pl-2">
+                                        {module.lessons.map((lesson) => (
+                                            <div
+                                                key={lesson.id}
+                                                className={`p-3 rounded-lg border cursor-pointer transition-colors ${lesson.id === currentLesson?.id
+                                                    ? 'border-primary bg-primary/5'
+                                                    : lesson.progress.status === 'not_started' && !lesson.is_preview
+                                                        ? 'border-muted bg-muted/20 cursor-not-allowed opacity-60'
+                                                        : 'border-border hover:border-primary/50'
+                                                    }`}
+                                                onClick={() => (lesson.is_preview || lesson.progress.status !== 'not_started') && navigateToLesson(lesson.id.toString())}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-shrink-0">
+                                                        {lesson.progress.is_completed ? (
+                                                            <CheckCircle className="h-5 w-5 text-green-600" />
+                                                        ) : lesson.progress.status === 'in_progress' ? (
+                                                            <div className="h-5 w-5 rounded-full border-2 border-primary bg-primary/20" />
+                                                        ) : lesson.is_preview ? (
+                                                            <div className="h-5 w-5 rounded-full border-2 border-primary" />
+                                                        ) : (
+                                                            <div className="h-5 w-5 rounded-full border-2 border-muted-foreground bg-muted" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-medium text-sm line-clamp-2">{lesson.title}</p>
+                                                            {lesson.is_preview && (
+                                                                <Badge variant="secondary" className="text-xs">
+                                                                    Xem trước
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            <span>{formatDuration(lesson.duration_minutes)}</span>
+                                                            <span>•</span>
+                                                            <span>Bài {lesson.sort_order}</span>
+                                                            {lesson.progress.completion_percentage > 0 && lesson.progress.completion_percentage < 100 && (
+                                                                <>
+                                                                    <span>•</span>
+                                                                    <span>{Math.round(lesson.progress.completion_percentage)}%</span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 </div>
                             ))}
@@ -258,18 +311,27 @@ export default function LessonPage() {
                 {/* Video Player */}
                 <div className="bg-black aspect-video">
                     <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-                        {currentLesson.video_url ? (
+                        {currentLesson.contents?.find(c => c.file_url && c.file_url.includes('video')) ? (
                             <div className="text-center text-white">
                                 <Play className="h-16 w-16 mx-auto mb-4" />
                                 <p>Video Player Placeholder</p>
                                 <p className="text-sm opacity-75 mt-2">
-                                    URL: {currentLesson.video_url}
+                                    Type: {currentLesson.content_type}
                                 </p>
+                                <div className="mt-2">
+                                    <Progress value={currentLesson.progress.completion_percentage} className="w-64 mx-auto" />
+                                    <p className="text-xs opacity-75 mt-1">
+                                        {Math.round(currentLesson.progress.completion_percentage)}% hoàn thành
+                                    </p>
+                                </div>
                             </div>
                         ) : (
                             <div className="text-center text-white">
                                 <FileText className="h-16 w-16 mx-auto mb-4" />
                                 <p>Nội dung bài học</p>
+                                <p className="text-sm opacity-75 mt-2">
+                                    Type: {currentLesson.content_type}
+                                </p>
                             </div>
                         )}
                     </div>
@@ -284,21 +346,42 @@ export default function LessonPage() {
                                 <div className="flex-1">
                                     <h1 className="text-2xl font-bold mb-2">{currentLesson.title}</h1>
                                     <p className="text-muted-foreground">{currentLesson.description}</p>
+                                    {currentModule && (
+                                        <p className="text-sm text-primary mt-1">
+                                            Module: {currentModule.title}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-2 ml-4">
                                     <Badge variant="outline" className="flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
-                                        {formatDuration(currentLesson.duration)}
+                                        {formatDuration(currentLesson.duration_minutes)}
                                     </Badge>
                                     <Badge variant="outline">
-                                        Bài {currentLesson.order}
+                                        Bài {currentLesson.sort_order}
                                     </Badge>
+                                    {currentLesson.is_preview && (
+                                        <Badge variant="secondary">
+                                            Xem trước
+                                        </Badge>
+                                    )}
                                 </div>
                             </div>
 
+                            {/* Progress Info */}
+                            {currentLesson.progress.completion_percentage > 0 && !currentLesson.progress.is_completed && (
+                                <div className="mb-4">
+                                    <div className="flex items-center justify-between text-sm mb-2">
+                                        <span>Tiến trình học tập</span>
+                                        <span>{Math.round(currentLesson.progress.completion_percentage)}%</span>
+                                    </div>
+                                    <Progress value={currentLesson.progress.completion_percentage} />
+                                </div>
+                            )}
+
                             {/* Action Buttons */}
                             <div className="flex items-center gap-3">
-                                {!currentLesson.is_completed && (
+                                {!currentLesson.progress.is_completed && (
                                     <Button
                                         onClick={handleMarkComplete}
                                         disabled={isMarkingComplete}
@@ -316,10 +399,16 @@ export default function LessonPage() {
                                         )}
                                     </Button>
                                 )}
-                                {currentLesson.is_completed && (
+                                {currentLesson.progress.is_completed && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                         <CheckCircle className="h-3 w-3" />
                                         Đã hoàn thành
+                                    </Badge>
+                                )}
+                                {currentLesson.progress.watch_time_seconds > 0 && (
+                                    <Badge variant="outline" className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        Đã xem {Math.round(currentLesson.progress.watch_time_seconds / 60)}m
                                     </Badge>
                                 )}
                             </div>
@@ -327,62 +416,51 @@ export default function LessonPage() {
 
                         <Separator className="mb-6" />
 
-                        {/* Lesson Content */}
-                        {currentLesson.content && (
-                            <Card className="mb-6">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <FileText className="h-5 w-5" />
-                                        Nội dung bài học
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div
-                                        className="prose max-w-none"
-                                        dangerouslySetInnerHTML={{ __html: currentLesson.content }}
-                                    />
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Resources */}
-                        {currentLesson.resources && currentLesson.resources.length > 0 && (
-                            <Card className="mb-6">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Download className="h-5 w-5" />
-                                        Tài liệu bài học
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Tải xuống các tài liệu hỗ trợ cho bài học này
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-3">
-                                        {currentLesson.resources.map((resource) => (
-                                            <div key={resource.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-primary/10 rounded">
-                                                        <FileText className="h-4 w-4 text-primary" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium">{resource.title}</p>
-                                                        {resource.size && (
+                        {/* Lesson Contents */}
+                        {currentLesson.contents && currentLesson.contents.length > 0 && (
+                            <div className="space-y-6 mb-6">
+                                {currentLesson.contents.map((content) => (
+                                    <Card key={content.id}>
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2">
+                                                <FileText className="h-5 w-5" />
+                                                {content.title}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {content.content_data ? (
+                                                <div
+                                                    className="prose max-w-none"
+                                                    dangerouslySetInnerHTML={{ __html: content.content_data }}
+                                                />
+                                            ) : content.file_url ? (
+                                                <div className="flex items-center justify-between p-3 border rounded-lg">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-primary/10 rounded">
+                                                            <FileText className="h-4 w-4 text-primary" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium">{content.title}</p>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {formatFileSize(resource.size)}
+                                                                {content.file_url.includes('video') ? 'Video' :
+                                                                    content.file_url.includes('pdf') ? 'PDF' : 'File'}
                                                             </p>
-                                                        )}
+                                                        </div>
                                                     </div>
+                                                    <Button variant="outline" size="sm" asChild>
+                                                        <a href={content.file_url} target="_blank" rel="noopener noreferrer">
+                                                            <Download className="h-4 w-4 mr-2" />
+                                                            Xem/Tải
+                                                        </a>
+                                                    </Button>
                                                 </div>
-                                                <Button variant="outline" size="sm">
-                                                    <Download className="h-4 w-4 mr-2" />
-                                                    Tải xuống
-                                                </Button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                            ) : (
+                                                <p className="text-muted-foreground">Nội dung không khả dụng</p>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
                         )}
 
                         {/* Navigation */}
@@ -391,7 +469,7 @@ export default function LessonPage() {
                                 {previousLesson ? (
                                     <Button
                                         variant="outline"
-                                        onClick={() => navigateToLesson(previousLesson.id)}
+                                        onClick={() => navigateToLesson(previousLesson.id.toString())}
                                     >
                                         <ChevronLeft className="h-4 w-4 mr-2" />
                                         Bài trước: {previousLesson.title}
@@ -404,8 +482,8 @@ export default function LessonPage() {
                             <div>
                                 {nextLesson ? (
                                     <Button
-                                        onClick={() => navigateToLesson(nextLesson.id)}
-                                        disabled={nextLesson.is_locked}
+                                        onClick={() => navigateToLesson(nextLesson.id.toString())}
+                                        disabled={nextLesson.progress.status === 'not_started' && !nextLesson.is_preview}
                                     >
                                         Bài tiếp: {nextLesson.title}
                                         <ChevronRight className="h-4 w-4 ml-2" />
@@ -424,3 +502,4 @@ export default function LessonPage() {
         </div>
     )
 }
+

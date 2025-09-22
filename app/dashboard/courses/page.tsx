@@ -13,10 +13,6 @@ import {
     PlayCircle,
     CheckCircle,
     AlertCircle,
-    Star,
-    Calendar,
-    TrendingUp,
-    ArrowLeft,
     Search,
     Filter,
     Download,
@@ -42,9 +38,42 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 
-import { useAuth } from '@/contexts/auth-context'
-import { useDashboard } from '@/hooks/use-dashboard'
-import { formatCurrency } from '@/lib/utils'
+import { enrollmentService } from '@/lib/api/enrollment'
+import { lessonsService } from '@/lib/api/lessons'
+
+// API Response interfaces
+interface ApiEnrollment {
+    id: string
+    course_id: number
+    user_id: number
+    status: string
+    access_granted: boolean
+    enrollment_date: string
+    activation_date: string
+    payment_status: string
+    payment_amount: number
+    discount_applied: number
+    email: string
+    full_name: string
+    course: {
+        id: number
+        title: string
+        slug: string
+        thumbnail_url: string
+        difficulty_level: string
+        instructor: {
+            name: string
+            avatar?: string
+        } | null
+    }
+    progress: {
+        completed_lessons: number
+        total_lessons: number
+        percentage: number
+        last_accessed: string | null
+        total_time_spent: number
+    }
+}
 
 interface EnrolledCourse {
     id: string
@@ -68,95 +97,150 @@ interface EnrolledCourse {
     completed_lessons: number
     certificate_available?: boolean
     rating?: number
+    firstLessonId?: number | null
 }
 
 export default function MyCoursesPage() {
-    const { user } = useAuth()
     const router = useRouter()
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState<string>('all')
     const [isLoading, setIsLoading] = useState(true)
     const [courses, setCourses] = useState<EnrolledCourse[]>([])
+    const [error, setError] = useState<string | null>(null)
 
-    // Mock data - replace with real API call
+    // Cache for lesson data to avoid repeated API calls
+    const [lessonsCache, setLessonsCache] = useState<Record<string, any>>({})
+
+    // Helper function to get lesson information for a course
+    const getLessonInfo = async (courseSlug: string, completedLessons: number, totalLessons: number) => {
+        try {
+            // Check cache first
+            if (lessonsCache[courseSlug]) {
+                const cached = lessonsCache[courseSlug]
+                return {
+                    firstLessonId: cached.firstLessonId,
+                    nextLessonId: completedLessons < totalLessons ? cached.lessons[completedLessons]?.id : null
+                }
+            }
+
+            // Fetch lesson data if not cached
+            const courseData = await lessonsService.getCourseWithLessons(courseSlug)
+            const allLessons = courseData.modules.flatMap(module => module.lessons)
+
+            // Cache the data
+            setLessonsCache(prev => ({
+                ...prev,
+                [courseSlug]: {
+                    firstLessonId: allLessons[0]?.id,
+                    lessons: allLessons
+                }
+            }))
+
+            return {
+                firstLessonId: allLessons[0]?.id,
+                nextLessonId: completedLessons < totalLessons ? allLessons[completedLessons]?.id : null
+            }
+        } catch (error) {
+            console.error(`Failed to get lesson info for ${courseSlug}:`, error)
+            return {
+                firstLessonId: null,
+                nextLessonId: null
+            }
+        }
+    }
+
+    // Real API call to get enrolled courses
     useEffect(() => {
         const fetchMyCourses = async () => {
             setIsLoading(true)
+            setError(null)
 
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            try {
+                // Use real API to get enrollments
+                const enrollments = await enrollmentService.getUserEnrollments()
 
-            // Mock enrolled courses data
-            const mockCourses: EnrolledCourse[] = [
-                {
-                    id: '1',
-                    title: 'React Fundamentals',
-                    slug: 'react-fundamentals',
-                    thumbnail_url: '/react-course.jpg',
-                    instructor: {
-                        name: 'John Doe',
-                        avatar: '/instructor-avatar.jpg'
-                    },
-                    progress: 65,
-                    status: 'active',
-                    enrollment_date: '2024-01-15',
-                    last_accessed: '2024-01-20',
-                    next_lesson: {
-                        id: '7',
-                        title: 'State Management with Hooks',
-                        url: '/courses/react-fundamentals/lessons/7'
-                    },
-                    total_lessons: 12,
-                    completed_lessons: 8,
-                    rating: 4.8
-                },
-                {
-                    id: '2',
-                    title: 'Digital Marketing Strategy',
-                    slug: 'digital-marketing-strategy',
-                    thumbnail_url: '/placeholder.jpg',
-                    instructor: {
-                        name: 'Jane Smith',
-                        avatar: '/instructor-avatar-2.jpg'
-                    },
-                    progress: 100,
-                    status: 'completed',
-                    enrollment_date: '2023-12-01',
-                    last_accessed: '2024-01-10',
-                    total_lessons: 15,
-                    completed_lessons: 15,
-                    certificate_available: true,
-                    rating: 5.0
-                },
-                {
-                    id: '3',
-                    title: 'Advanced JavaScript Patterns',
-                    slug: 'advanced-javascript',
-                    thumbnail_url: '/placeholder.jpg',
-                    instructor: {
-                        name: 'Mike Johnson',
-                        avatar: '/instructor-avatar.jpg'
-                    },
-                    progress: 25,
-                    status: 'active',
-                    enrollment_date: '2024-01-18',
-                    last_accessed: '2024-01-19',
-                    next_lesson: {
-                        id: '3',
-                        title: 'Prototype Chain Deep Dive',
-                        url: '/courses/advanced-javascript/lessons/3'
-                    },
-                    total_lessons: 20,
-                    completed_lessons: 5
-                }
-            ]
+                // Map enrollment data to course format for UI with real lesson IDs
+                const filteredEnrollments = enrollments.filter((enrollment: ApiEnrollment) => enrollment.access_granted)
 
-            setCourses(mockCourses)
-            setIsLoading(false)
+                const mappedCourses: EnrolledCourse[] = await Promise.all(
+                    filteredEnrollments.map(async (enrollment: ApiEnrollment) => {
+                        // Get real progress data from API response
+                        const progressPercentage = enrollment.progress?.percentage || 0
+                        const totalLessons = enrollment.progress?.total_lessons || 0
+                        const completedLessons = enrollment.progress?.completed_lessons || 0
+                        const courseSlug = enrollment.course?.slug || enrollment.course_id.toString().toLowerCase()
+
+                        // Get real lesson IDs
+                        const lessonInfo = await getLessonInfo(courseSlug, completedLessons, totalLessons)
+
+                        return {
+                            id: enrollment.course_id.toString(),
+                            title: enrollment.course?.title || `Course ${enrollment.course_id}`,
+                            slug: courseSlug,
+                            thumbnail_url: enrollment.course?.thumbnail_url || '/placeholder.jpg',
+                            instructor: {
+                                name: enrollment.course?.instructor?.name || 'Chưa có giảng viên',
+                                avatar: enrollment.course?.instructor?.avatar || '/instructor-avatar.jpg'
+                            },
+                            progress: progressPercentage,
+                            status: mapEnrollmentStatusToCourseStatus(enrollment.status, enrollment.access_granted),
+                            enrollment_date: enrollment.enrollment_date,
+                            last_accessed: enrollment.progress?.last_accessed || enrollment.enrollment_date,
+                            next_lesson: lessonInfo.nextLessonId ? {
+                                id: lessonInfo.nextLessonId.toString(),
+                                title: `Lesson ${completedLessons + 1}`,
+                                url: `/courses/${courseSlug}/lessons/${lessonInfo.nextLessonId}`
+                            } : undefined,
+                            total_lessons: totalLessons,
+                            completed_lessons: completedLessons,
+                            certificate_available: progressPercentage >= 100,
+                            rating: undefined, // Course rating not available in enrollment data
+                            // Store first lesson ID for navigation
+                            firstLessonId: lessonInfo.firstLessonId
+                        }
+                    })
+                )
+
+                setCourses(mappedCourses)
+            } catch (err) {
+                console.error('Failed to fetch enrolled courses:', err)
+                setError('Không thể tải danh sách khóa học. Vui lòng thử lại sau.')
+
+                // Fallback to empty array on error
+                setCourses([])
+            } finally {
+                setIsLoading(false)
+            }
         }
 
         fetchMyCourses()
     }, [])
+
+    // Helper function to map enrollment status to course status
+    const mapEnrollmentStatusToCourseStatus = (
+        enrollmentStatus: string,
+        hasAccess: boolean
+    ): EnrolledCourse['status'] => {
+        if (!hasAccess) return 'suspended'
+
+        switch (enrollmentStatus) {
+            case 'active':
+                return 'active'
+            case 'enrolled':
+                return 'active'
+            case 'activating':
+                return 'active'
+            case 'cancelled':
+                return 'suspended'
+            case 'pending':
+            case 'payment_pending':
+                return 'suspended'
+            case 'completed':
+                return 'completed'
+            default:
+                return 'active'
+        }
+    }
 
     const filteredCourses = courses.filter(course => {
         const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -187,31 +271,32 @@ export default function MyCoursesPage() {
     const handleContinueLearning = (course: EnrolledCourse) => {
         if (course.status === 'completed') {
             // Go to first lesson for review
-            router.push(`/courses/${course.slug}/lessons/1`)
+            if (course.firstLessonId) {
+                router.push(`/courses/${course.slug}/lessons/${course.firstLessonId}`)
+            } else {
+                // Fallback to course page if no lesson ID available
+                router.push(`/courses/${course.slug}`)
+            }
         } else if (course.next_lesson) {
-            // Continue from next lesson
+            // Continue from next lesson (URL already has correct lesson ID)
             router.push(course.next_lesson.url as any)
         } else {
             // Start from beginning
-            router.push(`/courses/${course.slug}/lessons/1`)
+            if (course.firstLessonId) {
+                router.push(`/courses/${course.slug}/lessons/${course.firstLessonId}`)
+            } else {
+                // Fallback to course page if no lesson ID available
+                router.push(`/courses/${course.slug}`)
+            }
         }
     }
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-background">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="flex items-center gap-4 mb-8">
-                        <Button variant="ghost" onClick={() => router.back()}>
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Quay lại
-                        </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold">Khóa học của tôi</h1>
-                            <p className="text-muted-foreground">Quản lý và tiếp tục học tập</p>
-                        </div>
-                    </div>
-
+            <div className="space-y-6">
+                <div className="animate-pulse">
+                    <div className="h-8 bg-muted rounded mb-4 w-64"></div>
+                    <div className="h-4 bg-muted rounded mb-8 w-48"></div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                             <Card key={i} className="animate-pulse">
@@ -231,50 +316,55 @@ export default function MyCoursesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="container mx-auto px-4 py-8">
-                {/* Header */}
-                <div className="flex items-center gap-4 mb-8">
-                    <Button variant="ghost" onClick={() => router.back()}>
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Quay lại
-                    </Button>
-                    <div className="flex-1">
-                        <h1 className="text-3xl font-bold">Khóa học của tôi</h1>
-                        <p className="text-muted-foreground">
-                            Bạn đang tham gia {courses.length} khóa học
-                        </p>
-                    </div>
-                </div>
+        <>
+            {/* Page Header */}
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold">Khóa học của tôi</h1>
+                <p className="text-muted-foreground">
+                    Bạn đang tham gia {courses.length} khóa học
+                </p>
+            </div>
 
-                {/* Filters */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input
-                            placeholder="Tìm kiếm khóa học..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-48">
-                            <Filter className="h-4 w-4 mr-2" />
-                            <SelectValue placeholder="Trạng thái" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Tất cả</SelectItem>
-                            <SelectItem value="active">Đang học</SelectItem>
-                            <SelectItem value="completed">Hoàn thành</SelectItem>
-                            <SelectItem value="expired">Hết hạn</SelectItem>
-                            <SelectItem value="suspended">Tạm dừng</SelectItem>
-                        </SelectContent>
-                    </Select>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                        placeholder="Tìm kiếm khóa học..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
                 </div>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-48">
+                        <Filter className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Tất cả</SelectItem>
+                        <SelectItem value="active">Đang học</SelectItem>
+                        <SelectItem value="completed">Hoàn thành</SelectItem>
+                        <SelectItem value="expired">Hết hạn</SelectItem>
+                        <SelectItem value="suspended">Tạm dừng</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
 
-                {/* Course Grid */}
-                {filteredCourses.length === 0 ? (
+            {/* Error State */}
+            {error ? (
+                <Card className="text-center py-12">
+                    <CardContent>
+                        <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Có lỗi xảy ra</h3>
+                        <p className="text-muted-foreground mb-4">{error}</p>
+                        <Button onClick={() => window.location.reload()}>
+                            Thử lại
+                        </Button>
+                    </CardContent>
+                </Card>
+            ) : /* Course Grid */
+                filteredCourses.length === 0 ? (
                     <Card className="text-center py-12">
                         <CardContent>
                             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -395,7 +485,6 @@ export default function MyCoursesPage() {
                         ))}
                     </div>
                 )}
-            </div>
-        </div>
+        </>
     )
 }

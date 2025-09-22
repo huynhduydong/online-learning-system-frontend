@@ -30,12 +30,14 @@ import {
 } from '@/components/ui/form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AppContainer } from '@/components/app-container'
 import { PageHeading } from '@/components/page-heading'
 import { LoadingSkeleton } from '@/components/loading-skeleton'
-import instructorService, { 
-  type InstructorCourse, 
-  type UpdateCourseRequest 
+import { LessonManagement } from '@/components/studio/lesson-management'
+import instructorService, {
+  type InstructorCourse,
+  type UpdateCourseRequest
 } from '@/lib/api/instructor'
 import { useAuth } from '@/contexts/auth-context'
 
@@ -87,13 +89,14 @@ export default function EditCoursePage() {
   const params = useParams()
   const router = useRouter()
   const courseId = parseInt(params.id as string)
-  
+
   const [isLoading, setIsLoading] = useState(false)
   const [course, setCourse] = useState<InstructorCourse | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [languages, setLanguages] = useState<Language[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('details')
 
   const form = useForm<EditCourseForm>({
     resolver: zodResolver(editCourseSchema),
@@ -133,7 +136,7 @@ export default function EditCoursePage() {
       if (courseResponse.success && courseResponse.data) {
         const courseData = courseResponse.data
         setCourse(courseData)
-        
+
         // Reset form with course data
         form.reset({
           title: courseData.title,
@@ -185,7 +188,7 @@ export default function EditCoursePage() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       // Prepare update data
       const updateData: UpdateCourseRequest = {
         title: data.title,
@@ -199,19 +202,19 @@ export default function EditCoursePage() {
       }
 
       console.log('Updating course:', { ...updateData, id: courseId })
-      
+
       const response = await instructorService.updateCourse(courseId, updateData)
-      
+
       if (response.success && response.data) {
         // Update local state
         setCourse(response.data)
-        
+
         // Show success message (could implement toast here)
         console.log('Course updated successfully')
       } else {
         throw new Error('Failed to update course')
       }
-      
+
     } catch (error) {
       console.error('Error updating course:', error)
       setError(error instanceof Error ? error.message : 'Failed to update course')
@@ -226,21 +229,21 @@ export default function EditCoursePage() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       console.log('Publishing course:', courseId)
-      
+
       const response = await instructorService.publishCourse(courseId)
-      
+
       if (response.success && response.data) {
         // Update course status
         setCourse({ ...course, status: 'published', published_at: response.data.published_at || new Date().toISOString() })
-        
+
         // Show success message
         console.log('Course published successfully')
       } else {
         throw new Error('Failed to publish course')
       }
-      
+
     } catch (error) {
       console.error('Error publishing course:', error)
       setError(error instanceof Error ? error.message : 'Failed to publish course')
@@ -316,11 +319,11 @@ export default function EditCoursePage() {
   const getStatusText = (status: 'draft' | 'published' | 'archived') => {
     switch (status) {
       case 'published':
-        return 'Published'
+        return 'Đã xuất bản'
       case 'archived':
-        return 'Archived'
+        return 'Đã lưu trữ'
       default:
-        return 'Draft'
+        return 'Bản nháp'
     }
   }
 
@@ -337,7 +340,7 @@ export default function EditCoursePage() {
             <div className="flex-1">
               <PageHeading
                 title={course.title}
-                description="Edit course details and content"
+                description="Chỉnh sửa thông tin và nội dung khóa học"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -348,7 +351,7 @@ export default function EditCoursePage() {
                 <Button variant="outline" size="sm" asChild>
                   <Link href={`/courses/${course.slug}`}>
                     <Eye className="mr-2 h-4 w-4" />
-                    View Live
+                    Xem trực tiếp
                   </Link>
                 </Button>
               )}
@@ -356,228 +359,253 @@ export default function EditCoursePage() {
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Course Details</CardTitle>
-              <CardDescription>
-                Update your course information and settings.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Required Fields */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Basic Information</h3>
-                    
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Course Title *</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Enter your course title"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+        <div className="max-w-5xl mx-auto">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Thông tin khóa học</TabsTrigger>
+              <TabsTrigger value="content">Nội dung khóa học</TabsTrigger>
+            </TabsList>
 
-                    <FormField
-                      control={form.control}
-                      name="short_description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Short Description *</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Provide a brief description of your course"
-                              className="min-h-[100px]"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            <TabsContent value="details" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thông tin khóa học</CardTitle>
+                  <CardDescription>
+                    Cập nhật thông tin và cài đặt khóa học của bạn.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      {/* Required Fields */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Thông tin cơ bản</h3>
 
-                    <FormField
-                      control={form.control}
-                      name="slug"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>URL Slug</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              readOnly
-                              className="bg-muted"
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Auto-generated from your course title
-                          </FormDescription>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Optional Fields */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Additional Settings</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="language"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Language</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {languages.map((language) => (
-                                  <SelectItem key={language.code} value={language.code}>
-                                    {language.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="difficulty_level"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Difficulty Level</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {difficultyLevels.map((level) => (
-                                  <SelectItem key={level.value} value={level.value}>
-                                    {level.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="category_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select 
-                            onValueChange={(value) => field.onChange(parseInt(value))} 
-                            value={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.id.toString()}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Price Section */}
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="is_free"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base">Free Course</FormLabel>
-                              <FormDescription>
-                                Make this course available for free
-                              </FormDescription>
-                            </div>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      {!isFree && (
                         <FormField
                           control={form.control}
-                          name="price"
+                          name="title"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Price (VND)</FormLabel>
+                              <FormLabel>Tên khóa học *</FormLabel>
                               <FormControl>
                                 <Input
-                                  type="number"
-                                  placeholder="299000"
+                                  placeholder="Nhập tên khóa học của bạn"
                                   {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                 />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex justify-between pt-6">
-                    <Button variant="outline" asChild>
-                      <Link href="/studio">Back to Courses</Link>
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button type="submit" variant="outline" disabled={isLoading}>
-                        {isLoading ? 'Saving...' : 'Save Changes'}
-                      </Button>
-                      {course.status === 'draft' && (
-                        <Button 
-                          type="button" 
-                          onClick={handlePublish}
-                          disabled={isLoading}
-                        >
-                          Publish Course
+                        <FormField
+                          control={form.control}
+                          name="short_description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mô tả ngắn *</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Cung cấp mô tả ngắn gọn về khóa học của bạn"
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="slug"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>URL Slug</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  readOnly
+                                  className="bg-muted"
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Tự động tạo từ tên khóa học
+                              </FormDescription>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Optional Fields */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Cài đặt bổ sung</h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="language"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Ngôn ngữ</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {languages.map((language) => (
+                                      <SelectItem key={language.code} value={language.code}>
+                                        {language.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="difficulty_level"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Độ khó</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {difficultyLevels.map((level) => (
+                                      <SelectItem key={level.value} value={level.value}>
+                                        {level.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="category_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Danh mục</FormLabel>
+                              <Select
+                                onValueChange={(value) => field.onChange(parseInt(value))}
+                                value={field.value?.toString()}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Chọn danh mục" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {categories.map((category) => (
+                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Price Section */}
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="is_free"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                  <FormLabel className="text-base">Khóa học miễn phí</FormLabel>
+                                  <FormDescription>
+                                    Cung cấp khóa học này miễn phí
+                                  </FormDescription>
+                                </div>
+                                <FormControl>
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+
+                          {!isFree && (
+                            <FormField
+                              control={form.control}
+                              name="price"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Giá (VND)</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      placeholder="299000"
+                                      {...field}
+                                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex justify-between pt-6">
+                        <Button variant="outline" asChild>
+                          <Link href="/studio">Quay lại danh sách</Link>
                         </Button>
-                      )}
-                    </div>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                        <div className="flex gap-2">
+                          <Button type="submit" variant="outline" disabled={isLoading}>
+                            {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                          </Button>
+                          {course.status === 'draft' && (
+                            <Button
+                              type="button"
+                              onClick={handlePublish}
+                              disabled={isLoading}
+                            >
+                              Xuất bản khóa học
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="content" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Nội dung khóa học</CardTitle>
+                  <CardDescription>
+                    Quản lý các chương và bài học trong khóa học.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <LessonManagement
+                    courseId={courseId}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </AppContainer>
     </div>

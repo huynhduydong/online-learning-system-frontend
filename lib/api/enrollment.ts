@@ -252,17 +252,17 @@ class EnrollmentService {
   /**
    * Get user's enrolled courses
    */
-  async getUserEnrollments(): Promise<EnrollmentStatus[]> {
+  async getUserEnrollments(): Promise<any[]> {
     try {
-      const response = await this.client.get<ApiResponse<EnrollmentStatus[]>>(
+      const response: any = await this.client.get(
         '/enrollments/my-courses'
       )
 
-      if (response.success && response.data) {
-        return response.data as unknown as EnrollmentStatus[]
+      if (response.success && response.data && response.data.enrollments) {
+        return response.data.enrollments
       }
 
-      throw new Error(response.error || 'Failed to get enrollments')
+      throw new Error('Failed to get enrollments')
     } catch (error) {
       console.error('Get user enrollments error:', error)
       throw error
