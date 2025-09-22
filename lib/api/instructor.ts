@@ -112,6 +112,13 @@ export interface InstructorLesson {
   content_type: 'video' | 'text' | 'quiz'
   video_url?: string
   content_data?: any
+  /**
+   * Indicates if the lesson is available as a preview (API field).
+   * The API provides `is_preview` to mark lessons that can be viewed before enrollment.
+   * The frontend expects `is_published` to indicate if the lesson is visible to users.
+   * These fields may overlap in meaning, but both are present for compatibility.
+   * When mapping data, ensure to translate `is_preview` from the API to `is_published` for frontend use.
+   */
   is_preview?: boolean    // API actual field
   is_published?: boolean  // Frontend expected field
   created_at: string
