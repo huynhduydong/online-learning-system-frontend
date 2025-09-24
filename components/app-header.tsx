@@ -29,6 +29,8 @@ import { Badge } from "@/components/ui/badge"
 import { AppContainer } from "./app-container"
 import { ThemeToggle } from "./theme-toggle"
 import { CourseCategoriesNav } from "./course-categories-nav"
+import { NotificationDropdown } from "./notifications/notification-dropdown"
+import { useNotifications } from "@/contexts/notification-context"
 
 interface NavItem {
   title: string
@@ -82,6 +84,9 @@ export function AppHeader({
 
   // Use auth context for user data and authentication
   const { user: authUser, logout, isAuthenticated } = useAuth()
+  
+  // Use notification context for notification data
+  const { unreadCount } = useNotifications()
 
   // Prefer auth context user over props
   const user = authUser || userProp
@@ -216,21 +221,8 @@ export function AppHeader({
             <ThemeToggle />
 
             {/* Notifications */}
-            {showNotifications && (
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                {notificationCount > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-                  >
-                    {notificationCount > 99 ? "99+" : notificationCount}
-                  </Badge>
-                )}
-                <span className="sr-only">
-                  Thông báo {notificationCount > 0 && `(${notificationCount})`}
-                </span>
-              </Button>
+            {showNotifications && isAuthenticated && (
+              <NotificationDropdown />
             )}
 
             {/* User Menu */}

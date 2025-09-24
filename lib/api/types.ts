@@ -694,3 +694,350 @@ export interface ApiCoursesByCategoryResponse {
     }
   }
 }
+
+// ===== Q&A SYSTEM TYPES =====
+
+// Question status enum
+export type QuestionStatus = 'new' | 'in_progress' | 'answered' | 'closed'
+
+// Question category enum
+export type QuestionCategory = 
+  | 'lesson_content'      // Nội dung bài học
+  | 'technical_issue'     // Vấn đề kỹ thuật
+  | 'administrative'      // Thủ tục hành chính
+  | 'support_request'     // Yêu cầu hỗ trợ
+  | 'bug_report'          // Báo cáo lỗi hệ thống
+
+// Question scope enum
+export type QuestionScope = 'course' | 'chapter' | 'lesson' | 'quiz' | 'assignment'
+
+// User role for Q&A permissions
+export type QAUserRole = 'student' | 'instructor' | 'ta' | 'admin' | 'guest'
+
+// Base user interface for Q&A
+export interface QAUser {
+  id: number
+  full_name: string
+  email: string
+  avatar_url?: string | null
+  role: QAUserRole
+}
+
+// Question tag interface
+export interface QuestionTag {
+  id: number
+  name: string
+  color?: string
+  description?: string
+  usage_count?: number
+}
+
+// Question attachment interface
+export interface QuestionAttachment {
+  id: number
+  filename: string
+  original_filename: string
+  file_url: string
+  file_size: number
+  file_type: string
+  uploaded_at: string
+}
+
+// Question vote interface
+export interface QuestionVote {
+  id: number
+  user_id: number
+  question_id: number
+  vote_type: 'up' | 'down'
+  created_at: string
+}
+
+// Answer vote interface
+export interface AnswerVote {
+  id: number
+  user_id: number
+  answer_id: number
+  vote_type: 'up' | 'down'
+  created_at: string
+}
+
+// Question interface
+export interface Question {
+  id: number
+  title: string
+  content: string
+  status: QuestionStatus
+  category: QuestionCategory
+  scope: QuestionScope
+  scope_id?: number // ID of course/chapter/lesson/quiz/assignment
+  scope_title?: string // Title of the scope item
+  is_pinned: boolean
+  is_featured: boolean
+  view_count: number
+  vote_score: number
+  answer_count: number
+  accepted_answer_id?: number | null
+  author: QAUser
+  tags: QuestionTag[]
+  attachments: QuestionAttachment[]
+  created_at: string
+  updated_at: string
+  last_activity_at: string
+  // User interaction data
+  user_vote?: 'up' | 'down' | null
+  is_following?: boolean
+}
+
+// Answer interface
+export interface Answer {
+  id: number
+  question_id: number
+  content: string
+  is_accepted: boolean
+  is_pinned: boolean
+  vote_score: number
+  comment_count: number
+  author: QAUser
+  attachments: QuestionAttachment[]
+  created_at: string
+  updated_at: string
+  // User interaction data
+  user_vote?: 'up' | 'down' | null
+}
+
+// Comment interface
+export interface Comment {
+  id: number
+  content: string
+  commentable_type: 'question' | 'answer'
+  commentable_id: number
+  parent_id?: number | null // For nested comments
+  author: QAUser
+  mentions: QAUser[] // Users mentioned in the comment
+  created_at: string
+  updated_at: string
+  // Nested comments
+  replies?: Comment[]
+  reply_count?: number
+}
+
+// Question with answers and comments
+export interface QuestionDetail extends Question {
+  answers: Answer[]
+  comments: Comment[]
+  related_questions?: Question[]
+}
+
+// Question creation request
+export interface CreateQuestionRequest {
+  title: string
+  content: string
+  category: QuestionCategory
+  scope: QuestionScope
+  scope_id?: number
+  tag_ids?: number[]
+  attachments?: File[]
+}
+
+// Question update request
+export interface UpdateQuestionRequest {
+  title?: string
+  content?: string
+  category?: QuestionCategory
+  status?: QuestionStatus
+  tag_ids?: number[]
+  is_pinned?: boolean
+  is_featured?: boolean
+}
+
+// Answer creation request
+export interface CreateAnswerRequest {
+  question_id: number
+  content: string
+  attachments?: File[]
+}
+
+// Answer update request
+export interface UpdateAnswerRequest {
+  content?: string
+  is_pinned?: boolean
+}
+
+// Comment creation request
+export interface CreateCommentRequest {
+  content: string
+  commentable_type: 'question' | 'answer'
+  commentable_id: number
+  parent_id?: number
+  mentioned_user_ids?: number[]
+}
+
+// Vote request
+export interface VoteRequest {
+  vote_type: 'up' | 'down'
+}
+
+// Question search and filter params
+export interface QuestionQueryParams {
+  page?: number
+  per_page?: number
+  q?: string // Search query
+  status?: QuestionStatus[]
+  category?: QuestionCategory[]
+  scope?: QuestionScope[]
+  scope_id?: number
+  tag_ids?: number[]
+  author_id?: number
+  sort_by?: 'newest' | 'oldest' | 'most_votes' | 'most_answers' | 'most_views' | 'last_activity'
+  sort_order?: 'asc' | 'desc'
+  unanswered_only?: boolean
+  pinned_only?: boolean
+  featured_only?: boolean
+}
+
+// Question statistics
+export interface QuestionStats {
+  total_questions: number
+  answered_questions: number
+  unanswered_questions: number
+  questions_by_status: Record<QuestionStatus, number>
+  questions_by_category: Record<QuestionCategory, number>
+  top_tags: Array<{
+    tag: QuestionTag
+    question_count: number
+  }>
+  most_active_users: Array<{
+    user: QAUser
+    question_count: number
+    answer_count: number
+  }>
+}
+
+// Pagination for Q&A
+export interface QAPagination {
+  current_page: number
+  per_page: number
+  total: number
+  total_pages: number
+  has_next: boolean
+  has_prev: boolean
+  next_page: number | null
+  prev_page: number | null
+}
+
+// API Response interfaces for Q&A
+
+export interface ApiQuestionsResponse {
+  success: boolean
+  message: string
+  data: {
+    questions: Question[]
+    pagination: QAPagination
+    filters_applied: QuestionQueryParams
+    stats?: QuestionStats
+  }
+}
+
+export interface ApiQuestionResponse {
+  success: boolean
+  message: string
+  data: QuestionDetail
+}
+
+export interface ApiCreateQuestionResponse {
+  success: boolean
+  message: string
+  data: Question
+}
+
+export interface ApiAnswersResponse {
+  success: boolean
+  message: string
+  data: {
+    answers: Answer[]
+    pagination: QAPagination
+  }
+}
+
+export interface ApiAnswerResponse {
+  success: boolean
+  message: string
+  data: Answer
+}
+
+export interface ApiCreateAnswerResponse {
+  success: boolean
+  message: string
+  data: Answer
+}
+
+export interface ApiCommentsResponse {
+  success: boolean
+  message: string
+  data: {
+    comments: Comment[]
+    pagination: QAPagination
+  }
+}
+
+export interface ApiCommentResponse {
+  success: boolean
+  message: string
+  data: Comment
+}
+
+export interface ApiCreateCommentResponse {
+  success: boolean
+  message: string
+  data: Comment
+}
+
+export interface ApiVoteResponse {
+  success: boolean
+  message: string
+  data: {
+    vote_score: number
+    user_vote: 'up' | 'down' | null
+  }
+}
+
+export interface ApiTagsResponse {
+  success: boolean
+  message: string
+  data: {
+    tags: QuestionTag[]
+    pagination?: QAPagination
+  }
+}
+
+export interface ApiQuestionStatsResponse {
+  success: boolean
+  message: string
+  data: QuestionStats
+}
+
+// Notification types for Q&A
+export interface QANotification {
+  id: number
+  type: 'new_answer' | 'answer_accepted' | 'question_mentioned' | 'answer_mentioned' | 'comment_reply' | 'question_status_changed'
+  title: string
+  message: string
+  data: {
+    question_id?: number
+    answer_id?: number
+    comment_id?: number
+    user_id?: number
+  }
+  is_read: boolean
+  created_at: string
+}
+
+export interface ApiNotificationsResponse {
+  success: boolean
+  message: string
+  data: {
+    notifications: QANotification[]
+    pagination: QAPagination
+    unread_count: number
+  }
+}

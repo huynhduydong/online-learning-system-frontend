@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, Plus, GraduationCap } from 'lucide-react'
+import { BookOpen, Plus, GraduationCap, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
@@ -25,6 +25,12 @@ const navigationItems = [
     href: '/studio/create',
     icon: Plus,
     description: 'Create a new course'
+  },
+  {
+    title: 'Admin Dashboard',
+    href: '/studio/admin',
+    icon: BarChart3,
+    description: 'Analytics and insights'
   }
 ]
 

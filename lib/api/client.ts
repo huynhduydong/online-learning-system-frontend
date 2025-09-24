@@ -260,5 +260,8 @@ class ApiClient {
 // Export singleton instance
 export const apiClient = new ApiClient()
 
+// Export class for creating new instances
+export { ApiClient }
+
 // Export utilities
 export { tokenManager as auth }
