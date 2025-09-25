@@ -65,8 +65,43 @@ export class QAService {
       throw new Error(response.message || 'Failed to fetch questions')
     } catch (error) {
       console.error('Error fetching questions:', error)
+      
+      // Handle specific database schema errors
+      if (error instanceof Error && error.message.includes('Unknown column')) {
+        const schemaError = new Error('Database schema error: The backend database is missing required columns. Please contact the administrator to update the database schema.')
+        schemaError.name = 'DatabaseSchemaError'
+        throw schemaError
+      }
+      
+      // Handle API client errors with more specific messaging
+      if (error.name === 'ApiClientError' && error.message.includes('votable_type')) {
+        const voteSchemaError = new Error('Vote system database error: The votes table is missing required columns. Please contact the administrator to update the database schema.')
+        voteSchemaError.name = 'VoteSchemaError'
+        throw voteSchemaError
+      }
+      
       throw error
     }
+  }
+
+  /**
+   * Helper method to get questions for a specific lesson
+   */
+  async getQuestionsForLesson(
+    lessonId: number, 
+    page: number = 1, 
+    perPage: number = 5,
+    additionalParams?: Omit<QuestionQueryParams, 'scope' | 'scope_id' | 'page' | 'per_page'>
+  ): Promise<ApiQuestionsResponse['data']> {
+    const params: QuestionQueryParams = {
+      scope: 'lesson',
+      scope_id: lessonId,
+      page,
+      per_page: perPage,
+      ...additionalParams
+    }
+    
+    return this.getQuestions(params)
   }
 
   /**
@@ -92,34 +127,39 @@ export class QAService {
    */
   async createQuestion(data: CreateQuestionRequest): Promise<Question> {
     try {
-      const formData = new FormData()
+      console.log('=== CREATE QUESTION DEBUG ===')
+      console.log('Input data received:', data)
+      console.log('Data type:', typeof data)
+      console.log('Data keys:', Object.keys(data))
       
-      // Add text fields
-      formData.append('title', data.title)
-      formData.append('content', data.content)
-      formData.append('category', data.category)
-      formData.append('scope', data.scope)
+      // Always send as JSON to match backend expectations
+      console.log('Sending as JSON format')
       
+      // Prepare JSON payload according to API specification
+      const jsonData: any = {
+        title: data.title,
+        content: data.content,
+        category: data.category,
+        scope: data.scope
+      }
+      
+      // Add scope_id if provided
       if (data.scope_id) {
-        formData.append('scope_id', data.scope_id.toString())
+        jsonData.scope_id = data.scope_id
       }
       
-      if (data.tag_ids) {
-        formData.append('tag_ids', JSON.stringify(data.tag_ids))
+      // Handle tags - send as array of strings
+      if (data.tags && data.tags.length > 0) {
+        jsonData.tags = data.tags
+      } else {
+        jsonData.tags = []
       }
       
-      // Add attachments
-      if (data.attachments) {
-        data.attachments.forEach((file, index) => {
-          formData.append(`attachments[${index}]`, file)
-        })
-      }
+      console.log('Final JSON payload:', jsonData)
+      console.log('JSON payload stringified:', JSON.stringify(jsonData))
+      console.log('=== END DEBUG ===')
       
-      const response = await this.client.post<ApiCreateQuestionResponse>('/qa/questions', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+      const response = await this.client.post<ApiCreateQuestionResponse>('/qa/questions', jsonData)
       
       if (response.success && response.data) {
         return response.data
@@ -171,7 +211,7 @@ export class QAService {
    */
   async toggleQuestionPin(questionId: number): Promise<Question> {
     try {
-      const response = await this.client.post<ApiCreateQuestionResponse>(`/qa/questions/${questionId}/toggle-pin`)
+      const response = await this.client.post<ApiCreateQuestionResponse>(`/qa/questions/${questionId}/pin`)
       
       if (response.success && response.data) {
         return response.data
@@ -189,7 +229,7 @@ export class QAService {
    */
   async toggleQuestionFeature(questionId: number): Promise<Question> {
     try {
-      const response = await this.client.post<ApiCreateQuestionResponse>(`/qa/questions/${questionId}/toggle-feature`)
+      const response = await this.client.post<ApiCreateQuestionResponse>(`/qa/questions/${questionId}/feature`)
       
       if (response.success && response.data) {
         return response.data
@@ -333,7 +373,7 @@ export class QAService {
    */
   async toggleAnswerPin(answerId: number): Promise<Answer> {
     try {
-      const response = await this.client.post<ApiCreateAnswerResponse>(`/qa/answers/${answerId}/toggle-pin`)
+      const response = await this.client.post<ApiCreateAnswerResponse>(`/qa/answers/${answerId}/pin`)
       
       if (response.success && response.data) {
         return response.data

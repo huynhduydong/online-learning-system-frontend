@@ -697,16 +697,15 @@ export interface ApiCoursesByCategoryResponse {
 
 // ===== Q&A SYSTEM TYPES =====
 
-// Question status enum
+// Q&A Types
 export type QuestionStatus = 'new' | 'in_progress' | 'answered' | 'closed'
 
-// Question category enum
+// Question Categories
 export type QuestionCategory = 
-  | 'lesson_content'      // Nội dung bài học
-  | 'technical_issue'     // Vấn đề kỹ thuật
-  | 'administrative'      // Thủ tục hành chính
-  | 'support_request'     // Yêu cầu hỗ trợ
-  | 'bug_report'          // Báo cáo lỗi hệ thống
+  | 'general'             // Câu hỏi chung
+  | 'technical'           // Câu hỏi kỹ thuật
+  | 'course'              // Câu hỏi về khóa học
+  | 'assignment'          // Câu hỏi về bài tập
 
 // Question scope enum
 export type QuestionScope = 'course' | 'chapter' | 'lesson' | 'quiz' | 'assignment'
@@ -836,6 +835,7 @@ export interface CreateQuestionRequest {
   scope: QuestionScope
   scope_id?: number
   tag_ids?: number[]
+  tags?: string[] // For backward compatibility with tag names
   attachments?: File[]
 }
 
@@ -882,9 +882,9 @@ export interface QuestionQueryParams {
   page?: number
   per_page?: number
   q?: string // Search query
-  status?: QuestionStatus[]
-  category?: QuestionCategory[]
-  scope?: QuestionScope[]
+  status?: QuestionStatus[] | QuestionStatus
+  category?: QuestionCategory[] | QuestionCategory
+  scope?: QuestionScope[] | QuestionScope
   scope_id?: number
   tag_ids?: number[]
   author_id?: number

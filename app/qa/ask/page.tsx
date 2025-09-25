@@ -244,9 +244,9 @@ export default function AskQuestionPage() {
         title: data.title,
         content: data.content,
         category: data.category,
-        courseId: data.courseId,
-        lessonId: data.lessonId,
-        tags: data.tags,
+        scope: data.courseId ? 'course' : 'general',
+        scope_id: data.courseId ? parseInt(data.courseId) : undefined,
+        tags: data.tags, // Send tag names for backend processing
         attachments: uploadedFiles.filter(f => f.url).map(f => ({
           url: f.url!,
           name: f.name,
@@ -254,6 +254,8 @@ export default function AskQuestionPage() {
           size: f.size
         }))
       }
+
+      console.log('Submitting question data from ask page:', requestData) // Debug log
 
       const response = await qaService.createQuestion(requestData)
       

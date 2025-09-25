@@ -37,6 +37,8 @@ import {
 
 import { useAuth } from '@/contexts/auth-context'
 import { useLesson } from '@/hooks/use-lesson'
+import { QuestionForm } from '@/components/qa/question-form'
+import { LessonQASection } from '@/components/qa/lesson-qa-section'
 
 export default function LessonPage() {
     const params = useParams()
@@ -65,6 +67,15 @@ export default function LessonPage() {
         trackProgress,
         refreshData
     } = useLesson({ courseSlug, lessonId })
+
+    // Debug logging
+    console.log('Lesson Page Debug:', {
+        courseSlug,
+        lessonId,
+        currentLesson,
+        isLoading,
+        error
+    })
 
     const handleMarkComplete = async () => {
         if (!currentLesson || currentLesson.progress.is_completed) return
@@ -460,6 +471,17 @@ export default function LessonPage() {
                                         </CardContent>
                                     </Card>
                                 ))}
+                            </div>
+                        )}
+
+                        {/* Q&A Section */}
+                        {currentLesson && (
+                            <div className="mt-8">
+                                <LessonQASection 
+                                    lessonId={currentLesson.id.toString()}
+                                    lessonTitle={currentLesson.title}
+                                    courseId={currentLesson.course_id?.toString()}
+                                />
                             </div>
                         )}
 
