@@ -704,8 +704,17 @@ export type QuestionStatus = 'new' | 'in_progress' | 'answered' | 'closed'
 export type QuestionCategory = 
   | 'general'             // Câu hỏi chung
   | 'technical'           // Câu hỏi kỹ thuật
+  | 'technical_question'  // Câu hỏi kỹ thuật (new API format)
   | 'course'              // Câu hỏi về khóa học
+  | 'course_content'      // Nội dung khóa học
   | 'assignment'          // Câu hỏi về bài tập
+  | 'assignment_help'     // Hỗ trợ bài tập
+  | 'general_discussion'  // Thảo luận chung
+  | 'lesson_content'      // Nội dung bài học
+  | 'technical_issue'     // Vấn đề kỹ thuật
+  | 'administrative'      // Thủ tục hành chính
+  | 'support_request'     // Yêu cầu hỗ trợ
+  | 'bug_report'          // Báo cáo lỗi hệ thống
 
 // Question scope enum
 export type QuestionScope = 'course' | 'chapter' | 'lesson' | 'quiz' | 'assignment'
@@ -716,10 +725,11 @@ export type QAUserRole = 'student' | 'instructor' | 'ta' | 'admin' | 'guest'
 // Base user interface for Q&A
 export interface QAUser {
   id: number
-  full_name: string
-  email: string
+  full_name?: string
+  name?: string // For backward compatibility with new API format
+  email?: string
   avatar_url?: string | null
-  role: QAUserRole
+  role?: QAUserRole
 }
 
 // Question tag interface
@@ -777,7 +787,7 @@ export interface Question {
   answer_count: number
   accepted_answer_id?: number | null
   author: QAUser
-  tags: QuestionTag[]
+  tags: QuestionTag[] | string[] // Support both tag objects and string arrays
   attachments: QuestionAttachment[]
   created_at: string
   updated_at: string
@@ -915,27 +925,45 @@ export interface QuestionStats {
 
 // Pagination for Q&A
 export interface QAPagination {
-  current_page: number
-  per_page: number
+  current_page?: number
+  page?: number
+  per_page?: number
+  limit?: number
   total: number
-  total_pages: number
-  has_next: boolean
-  has_prev: boolean
-  next_page: number | null
-  prev_page: number | null
+  total_pages?: number
+  totalPages?: number
+  has_next?: boolean
+  has_prev?: boolean
+  next_page?: number | null
+  prev_page?: number | null
 }
 
 // API Response interfaces for Q&A
 
+// API Response for Questions (new format)
 export interface ApiQuestionsResponse {
+  success: boolean
+  message: string
+  data: Question[] // Direct array of questions
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
+}
+
+// Legacy API Response for Questions (for backward compatibility)
+export interface LegacyApiQuestionsResponse {
   success: boolean
   message: string
   data: {
     questions: Question[]
     pagination: QAPagination
-    filters_applied: QuestionQueryParams
+    filters_applied?: QuestionQueryParams
     stats?: QuestionStats
   }
+  pagination?: QAPagination
 }
 
 export interface ApiQuestionResponse {

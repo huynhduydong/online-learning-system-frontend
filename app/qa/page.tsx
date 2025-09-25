@@ -140,9 +140,9 @@ export default function QAPage() {
 
       const response = await qaService.getQuestions(searchParamsObj)
 
-      setQuestions(response.data.questions)
-      setTotalPages(response.data.pagination.totalPages)
-      setTotalQuestions(response.data.pagination.total)
+      setQuestions(response.questions)
+      setTotalPages(response.pagination?.totalPages || 1)
+      setTotalQuestions(response.pagination?.total || response.questions.length)
     } catch (err) {
       console.error('Error fetching questions:', err)
       setError('Không thể tải danh sách câu hỏi. Vui lòng thử lại.')

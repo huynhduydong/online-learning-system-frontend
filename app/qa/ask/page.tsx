@@ -142,11 +142,10 @@ export default function AskQuestionPage() {
     if (watchedTitle && watchedTitle.length > 10) {
       const searchSimilar = async () => {
         try {
-          const response = await qaService.searchQuestions({
-            query: watchedTitle,
-            limit: 3
+          const response = await qaService.searchQuestions(watchedTitle, {
+            per_page: 3
           })
-          setSimilarQuestions(response.data.questions)
+          setSimilarQuestions(response.questions)
         } catch (error) {
           console.error('Error searching similar questions:', error)
         }

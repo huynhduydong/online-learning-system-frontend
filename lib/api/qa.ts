@@ -7,6 +7,7 @@ import type {
   UpdateQuestionRequest,
   QuestionQueryParams,
   ApiQuestionsResponse,
+  LegacyApiQuestionsResponse,
   ApiQuestionResponse,
   ApiCreateQuestionResponse,
   
@@ -54,12 +55,37 @@ export class QAService {
   /**
    * Get questions with filtering and pagination
    */
-  async getQuestions(params?: QuestionQueryParams): Promise<ApiQuestionsResponse['data']> {
+  async getQuestions(params?: QuestionQueryParams): Promise<{ questions: Question[], pagination: any }> {
     try {
-      const response = await this.client.get<ApiQuestionsResponse>('/qa/questions', { params })
+      // Prepare parameters for the new API endpoint
+      const apiParams = {
+        page: params?.page || 1,
+        per_page: params?.per_page || 20,
+        category: params?.category,
+        scope: params?.scope || 'course',
+        scope_id: params?.scope_id !== undefined ? params.scope_id : 1,
+        sort_by: params?.sort_by || 'newest',
+        q: params?.q,
+        status: params?.status,
+        tag: params?.tag
+      }
+
+      // Use the new API endpoint
+      const response = await this.client.get<ApiQuestionsResponse>('/questions', { params: apiParams })
       
       if (response.success && response.data) {
-        return response.data
+        // Handle new API format where data is an array of questions
+        if (Array.isArray(response.data)) {
+          return {
+            questions: response.data,
+            pagination: response.pagination || {}
+          }
+        }
+        // Fallback for other formats
+        return {
+          questions: response.data,
+          pagination: response.pagination || {}
+        }
       }
       
       throw new Error(response.message || 'Failed to fetch questions')
@@ -92,16 +118,14 @@ export class QAService {
     page: number = 1, 
     perPage: number = 5,
     additionalParams?: Omit<QuestionQueryParams, 'scope' | 'scope_id' | 'page' | 'per_page'>
-  ): Promise<ApiQuestionsResponse['data']> {
-    const params: QuestionQueryParams = {
+  ): Promise<{ questions: Question[], pagination: any }> {
+    return this.getQuestions({
       scope: 'lesson',
       scope_id: lessonId,
       page,
       per_page: perPage,
       ...additionalParams
-    }
-    
-    return this.getQuestions(params)
+    })
   }
 
   /**
@@ -670,10 +694,14 @@ export class QAService {
   /**
    * Search questions with suggestions
    */
-  async searchQuestions(query: string, params?: Partial<QuestionQueryParams>): Promise<ApiQuestionsResponse['data']> {
+  async searchQuestions(query: string, params?: Partial<QuestionQueryParams>): Promise<{ questions: Question[], pagination: any }> {
     try {
       const searchParams = {
         q: query,
+        scope: params?.scope || 'course',
+        scope_id: params?.scope_id || 1,
+        page: params?.page || 1,
+        per_page: params?.per_page || 20,
         ...params
       }
       

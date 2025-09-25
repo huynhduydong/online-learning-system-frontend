@@ -48,14 +48,14 @@ const generateSlug = (title: string): string => {
 
 // Form validation schema
 const createCourseSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
-  short_description: z.string().min(1, 'Short description is required').max(500, 'Description must be less than 500 characters'),
+  title: z.string().min(1, 'Tiêu đề là bắt buộc').max(100, 'Tiêu đề phải ít hơn 100 ký tự'),
+  short_description: z.string().min(1, 'Mô tả ngắn là bắt buộc').max(500, 'Mô tả phải ít hơn 500 ký tự'),
   language: z.string().optional(),
   difficulty_level: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
   category_id: z.number().optional(),
-  price: z.number().min(0, 'Price must be 0 or greater').optional(),
+  price: z.number().min(0, 'Giá phải từ 0 trở lên').optional(),
   is_free: z.boolean().default(false),
-  slug: z.string().min(1, 'Slug is required'),
+  slug: z.string().min(1, 'Slug là bắt buộc'),
 })
 
 type CreateCourseForm = z.infer<typeof createCourseSchema>
@@ -73,9 +73,9 @@ interface Language {
 }
 
 const difficultyLevels = [
-  { value: 'beginner', label: 'Beginner' },
-  { value: 'intermediate', label: 'Intermediate' },
-  { value: 'advanced', label: 'Advanced' },
+  { value: 'beginner', label: 'Người Mới Bắt Đầu' },
+  { value: 'intermediate', label: 'Trung Cấp' },
+  { value: 'advanced', label: 'Nâng Cao' },
 ]
 
 export default function CreateCoursePage() {
@@ -199,8 +199,8 @@ export default function CreateCoursePage() {
                 </Link>
               </Button>
               <PageHeading
-                title="Create New Course"
-                description="Step 1: Basic Information"
+                title="Tạo Khóa Học Mới"
+                description="Bước 1: Thông Tin Cơ Bản"
               />
             </div>
           </div>
@@ -226,8 +226,8 @@ export default function CreateCoursePage() {
                 </Link>
               </Button>
               <PageHeading
-                title="Create New Course"
-                description="Step 1: Basic Information"
+                title="Tạo Khóa Học Mới"
+                description="Bước 1: Thông Tin Cơ Bản"
               />
             </div>
           </div>
@@ -236,12 +236,12 @@ export default function CreateCoursePage() {
             <Card>
               <CardContent className="text-center py-12">
                 <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-                <CardTitle className="mb-2">Error Loading Form Data</CardTitle>
+                <CardTitle className="mb-2">Lỗi Tải Dữ Liệu Form</CardTitle>
                 <CardDescription className="mb-4">
                   {error}
                 </CardDescription>
                 <Button onClick={fetchSupportingData} variant="outline">
-                  Try Again
+                  Thử Lại
                 </Button>
               </CardContent>
             </Card>
@@ -262,8 +262,8 @@ export default function CreateCoursePage() {
               </Link>
             </Button>
             <PageHeading
-              title="Create New Course"
-              description="Step 1: Basic Information"
+              title="Tạo Khóa Học Mới"
+              description="Bước 1: Thông Tin Cơ Bản"
             />
           </div>
         </div>
@@ -271,9 +271,9 @@ export default function CreateCoursePage() {
         <div className="max-w-2xl mx-auto">
           <Card>
             <CardHeader>
-              <CardTitle>Course Details</CardTitle>
+              <CardTitle>Chi Tiết Khóa Học</CardTitle>
               <CardDescription>
-                Provide basic information about your course. You can always edit these details later.
+                Cung cấp thông tin cơ bản về khóa học của bạn. Bạn có thể chỉnh sửa những chi tiết này sau.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -289,22 +289,22 @@ export default function CreateCoursePage() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {/* Required Fields */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Required Information</h3>
+                    <h3 className="text-lg font-medium">Thông Tin Bắt Buộc</h3>
                     
                     <FormField
                       control={form.control}
                       name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Course Title *</FormLabel>
+                          <FormLabel>Tiêu Đề Khóa Học *</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter your course title"
+                              placeholder="Nhập tiêu đề khóa học của bạn"
                               {...field}
                             />
                           </FormControl>
                           <FormDescription>
-                            Choose a clear, descriptive title for your course
+                            Chọn một tiêu đề rõ ràng, mô tả cho khóa học của bạn
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -316,16 +316,16 @@ export default function CreateCoursePage() {
                       name="short_description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Short Description *</FormLabel>
+                          <FormLabel>Mô Tả Ngắn *</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Provide a brief description of your course"
+                              placeholder="Cung cấp mô tả ngắn gọn về khóa học của bạn"
                               className="min-h-[100px]"
                               {...field}
                             />
                           </FormControl>
                           <FormDescription>
-                            Summarize what students will learn in this course
+                            Tóm tắt những gì học viên sẽ học trong khóa học này
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -340,14 +340,14 @@ export default function CreateCoursePage() {
                           <FormLabel>URL Slug</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="course-url-slug"
+                              placeholder="url-khoa-hoc"
                               {...field}
                               readOnly
                               className="bg-muted"
                             />
                           </FormControl>
                           <FormDescription>
-                            Auto-generated from your course title. This will be used in the course URL.
+                            Tự động tạo từ tiêu đề khóa học. Sẽ được sử dụng trong URL khóa học.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -357,7 +357,7 @@ export default function CreateCoursePage() {
 
                   {/* Optional Fields */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Optional Information</h3>
+                    <h3 className="text-lg font-medium">Thông Tin Tùy Chọn</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
@@ -365,11 +365,11 @@ export default function CreateCoursePage() {
                         name="language"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Language</FormLabel>
+                            <FormLabel>Ngôn Ngữ</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select language" />
+                                  <SelectValue placeholder="Chọn ngôn ngữ" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -390,11 +390,11 @@ export default function CreateCoursePage() {
                         name="difficulty_level"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Difficulty Level</FormLabel>
+                            <FormLabel>Mức Độ Khó</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select level" />
+                                  <SelectValue placeholder="Chọn mức độ" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -416,14 +416,14 @@ export default function CreateCoursePage() {
                       name="category_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category</FormLabel>
+                          <FormLabel>Danh Mục</FormLabel>
                           <Select 
                             onValueChange={(value) => field.onChange(parseInt(value))} 
                             defaultValue={field.value?.toString()}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
+                                <SelectValue placeholder="Chọn một danh mục" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -447,9 +447,9 @@ export default function CreateCoursePage() {
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
-                              <FormLabel className="text-base">Free Course</FormLabel>
+                              <FormLabel className="text-base">Khóa Học Miễn Phí</FormLabel>
                               <FormDescription>
-                                Make this course available for free
+                                Làm cho khóa học này có sẵn miễn phí
                               </FormDescription>
                             </div>
                             <FormControl>
@@ -468,7 +468,7 @@ export default function CreateCoursePage() {
                           name="price"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Price (VND)</FormLabel>
+                              <FormLabel>Giá (VND)</FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
@@ -478,7 +478,7 @@ export default function CreateCoursePage() {
                                 />
                               </FormControl>
                               <FormDescription>
-                                Set the price for your course in Vietnamese Dong
+                                Đặt giá cho khóa học của bạn bằng Đồng Việt Nam
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
@@ -491,18 +491,18 @@ export default function CreateCoursePage() {
                   {/* Actions */}
                   <div className="flex justify-between pt-6">
                     <Button variant="outline" asChild>
-                      <Link href="/studio">Cancel</Link>
+                      <Link href="/studio">Hủy</Link>
                     </Button>
                     <Button type="submit" disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Saving...
+                          Đang lưu...
                         </>
                       ) : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
-                          Save Draft and Continue
+                          Lưu Bản Nháp và Tiếp Tục
                         </>
                       )}
                     </Button>

@@ -87,12 +87,12 @@ export function LessonQASection({
       console.log('API response received:', response)
       
       if (page === 1) {
-        setQuestions(response.data.questions)
+        setQuestions(response.questions)
       } else {
-        setQuestions(prev => [...prev, ...response.data.questions])
+        setQuestions(prev => [...prev, ...response.questions])
       }
       
-      setHasMore(response.data.pagination.has_next)
+      setHasMore(response.pagination?.has_next || response.pagination?.page < response.pagination?.totalPages)
     } catch (err) {
       console.error('Error loading questions:', err)
       

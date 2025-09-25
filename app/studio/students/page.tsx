@@ -287,7 +287,7 @@ export default function StudentsPage() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading student data...</p>
+            <p className="text-muted-foreground">Đang tải dữ liệu học viên...</p>
           </div>
         </div>
       </div>
@@ -299,13 +299,13 @@ export default function StudentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Student Progress Tracking</h1>
-          <p className="text-muted-foreground">Monitor and analyze student progress across all courses</p>
+          <h1 className="text-3xl font-bold">Theo Dõi Tiến Độ Học Viên</h1>
+          <p className="text-muted-foreground">Giám sát và phân tích tiến độ học viên trên tất cả khóa học</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={exportStudentsData} variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Xuất Dữ Liệu
           </Button>
         </div>
       </div>
@@ -314,7 +314,7 @@ export default function StudentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">Tổng Số Học Viên</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -324,7 +324,7 @@ export default function StudentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Students</CardTitle>
+            <CardTitle className="text-sm font-medium">Học Viên Đang Hoạt Động</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -334,7 +334,7 @@ export default function StudentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">Đã Hoàn Thành</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -344,7 +344,7 @@ export default function StudentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">Tiến Độ Trung Bình</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -354,7 +354,7 @@ export default function StudentsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Time Spent</CardTitle>
+            <CardTitle className="text-sm font-medium">Tổng Thời Gian Học</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -366,13 +366,13 @@ export default function StudentsPage() {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters & Search</CardTitle>
+          <CardTitle>Bộ Lọc & Tìm Kiếm</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <Input
-                placeholder="Search students by name, email, or course..."
+                placeholder="Tìm kiếm học viên theo tên, email hoặc khóa học..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full"
@@ -398,23 +398,23 @@ export default function StudentsPage() {
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="dropped">Dropped</SelectItem>
+                <SelectItem value="all">Tất Cả Trạng Thái</SelectItem>
+                <SelectItem value="active">Đang Hoạt Động</SelectItem>
+                <SelectItem value="completed">Đã Hoàn Thành</SelectItem>
+                <SelectItem value="inactive">Không Hoạt Động</SelectItem>
+                <SelectItem value="dropped">Đã Bỏ Học</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full sm:w-[150px]">
-                <SelectValue placeholder="Sort By" />
+                <SelectValue placeholder="Sắp Xếp Theo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="progress">Progress</SelectItem>
-                <SelectItem value="lastActivity">Last Activity</SelectItem>
-                <SelectItem value="timeSpent">Time Spent</SelectItem>
-                <SelectItem value="studentName">Name</SelectItem>
+                <SelectItem value="progress">Tiến Độ</SelectItem>
+                <SelectItem value="lastActivity">Hoạt Động Gần Nhất</SelectItem>
+                <SelectItem value="timeSpent">Thời Gian Học</SelectItem>
+                <SelectItem value="studentName">Tên</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -424,9 +424,9 @@ export default function StudentsPage() {
       {/* Analytics Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="progress">Progress Analytics</TabsTrigger>
-          <TabsTrigger value="students">Student List</TabsTrigger>
+          <TabsTrigger value="overview">Tổng Quan</TabsTrigger>
+          <TabsTrigger value="progress">Phân Tích Tiến Độ</TabsTrigger>
+          <TabsTrigger value="students">Danh Sách Học Viên</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

@@ -250,13 +250,13 @@ export default function CourseManagementPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <PageHeading
-            title="Course Management"
-            description="Manage your courses and track their performance"
+            title="Quản Lý Khóa Học"
+            description="Quản lý khóa học và theo dõi hiệu suất của chúng"
           />
           <Button asChild>
             <Link href="/studio/create">
               <Plus className="mr-2 h-4 w-4" />
-              Create Course
+              Tạo Khóa Học
             </Link>
           </Button>
         </div>
@@ -266,33 +266,33 @@ export default function CourseManagementPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+                <CardTitle className="text-sm font-medium">Tổng Số Khóa Học</CardTitle>
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalCourses}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats.publishedCourses} published, {stats.draftCourses} drafts
+                  {stats.publishedCourses} đã xuất bản, {stats.draftCourses} bản nháp
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                <CardTitle className="text-sm font-medium">Tổng Số Học Viên</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalStudents}</div>
                 <p className="text-xs text-muted-foreground">
-                  Across all courses
+                  Trên tất cả khóa học
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <CardTitle className="text-sm font-medium">Tổng Doanh Thu</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
