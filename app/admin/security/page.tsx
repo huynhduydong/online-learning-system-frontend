@@ -198,38 +198,30 @@ const systemHealth = {
     backup: { status: 'healthy', lastBackup: '2024-01-20 02:00', size: '2.4GB' }
 }
 
-const getSeverityColor = (severity: string) => {
-    switch (severity) {
-        case 'critical':
-            return 'bg-red-100 text-red-800'
-        case 'high':
-            return 'bg-orange-100 text-orange-800'
-        case 'medium':
-            return 'bg-yellow-100 text-yellow-800'
-        case 'low':
-            return 'bg-blue-100 text-blue-800'
-        default:
-            return 'bg-gray-100 text-gray-800'
-    }
+// Utility function to get color class by type and value
+const colorMappings: Record<string, Record<string, string>> = {
+    severity: {
+        critical: 'bg-red-100 text-red-800',
+        high: 'bg-orange-100 text-orange-800',
+        medium: 'bg-yellow-100 text-yellow-800',
+        low: 'bg-blue-100 text-blue-800',
+    },
+    status: {
+        success: 'bg-green-100 text-green-800',
+        failed: 'bg-red-100 text-red-800',
+        blocked: 'bg-red-100 text-red-800',
+        investigating: 'bg-yellow-100 text-yellow-800',
+        resolved: 'bg-green-100 text-green-800',
+    },
 }
 
-const getStatusColor = (status: string) => {
-    switch (status) {
-        case 'success':
-            return 'bg-green-100 text-green-800'
-        case 'failed':
-            return 'bg-red-100 text-red-800'
-        case 'blocked':
-            return 'bg-red-100 text-red-800'
-        case 'investigating':
-            return 'bg-yellow-100 text-yellow-800'
-        case 'resolved':
-            return 'bg-green-100 text-green-800'
-        default:
-            return 'bg-gray-100 text-gray-800'
-    }
+const getColorByType = (type: 'severity' | 'status', value: string) => {
+    return colorMappings[type][value] || 'bg-gray-100 text-gray-800'
 }
 
+// For backward compatibility, you can keep these wrappers if needed:
+const getSeverityColor = (severity: string) => getColorByType('severity', severity)
+const getStatusColor = (status: string) => getColorByType('status', status)
 export default function AdminSecurityPage() {
     const [selectedPeriod, setSelectedPeriod] = useState('24h')
     const [searchTerm, setSearchTerm] = useState('')
