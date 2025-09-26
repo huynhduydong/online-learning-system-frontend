@@ -66,7 +66,7 @@ export class QAService {
         sort_by: params?.sort_by || 'newest',
         q: params?.q,
         status: params?.status,
-        tag: params?.tag
+        tag_ids: params?.tag_ids
       }
 
       // Only set scope_id if it's provided, or if scope is 'course' and no scope_id is provided
