@@ -196,214 +196,230 @@ export function QuestionDetailExpansion({
     const statusInfo = statusConfig[question.status as QuestionStatus]
 
     return (
-        <Card className={`animate-in slide-in-from-bottom-4 duration-300 ${className}`}>
-            {/* Header */}
-            <CardHeader className="pb-4">
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                            {question.is_pinned && (
-                                <Pin className="h-4 w-4 text-orange-500 fill-current" />
-                            )}
-                            <Badge variant="secondary" className={`${statusInfo.color} text-white`}>
-                                {statusInfo.label}
-                            </Badge>
-                            <Badge variant="outline">
-                                {question.category}
-                            </Badge>
-                        </div>
-                        <h2 className="text-xl font-semibold text-gray-900 leading-tight">
-                            {question.title}
-                        </h2>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={onClose}>
-                        <X className="h-4 w-4" />
+        <Card className={`animate-in slide-in-from-bottom-4 duration-300 border-t-4 border-t-blue-500 ${className}`}>
+            {/* Navigation */}
+            <CardHeader className="pb-4 border-b">
+                <div className="flex items-center justify-between">
+                    <Button variant="ghost" onClick={onClose} className="text-sm">
+                        <X className="h-4 w-4 mr-2" />
+
                     </Button>
-                </div>
-
-                {/* Author and meta */}
-                <div className="flex items-center gap-4 pt-2">
-                    <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={question.author.avatar_url || undefined} />
-                            <AvatarFallback>
-                                <UserIcon className="h-4 w-4" />
-                            </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-medium text-sm">{question.author.full_name}</p>
-                            <p className="text-xs text-gray-500">
-                                {formatDistanceToNow(new Date(question.created_at), {
-                                    addSuffix: true,
-                                    locale: vi
-                                })}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                            <Eye className="h-4 w-4" />
-                            <span>{question.view_count || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <MessageCircle className="h-4 w-4" />
-                            <span>{question.answer_count || 0}</span>
-                        </div>
-                    </div>
                 </div>
             </CardHeader>
 
-            <CardContent className="space-y-6">
-                {/* Question Content */}
-                <div>
-                    <div className="prose prose-sm max-w-none">
-                        <div dangerouslySetInnerHTML={{ __html: question.content.replace(/\n/g, '<br>') }} />
-                    </div>
+            <CardContent className="p-6">
+                {/* Question Title */}
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                    {question.title}
+                </h1>
 
-                    {/* Tags */}
-                    {question.tags && question.tags.length > 0 && (
-                        <div className="flex items-center gap-2 mt-4">
-                            <Tag className="h-4 w-4 text-gray-400" />
-                            <div className="flex flex-wrap gap-1">
-                                {question.tags.map((tag, index) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
-                                        {typeof tag === 'string' ? tag : tag.name}
-                                    </Badge>
-                                ))}
+                {/* Question Meta Information */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                        {/* Author Info */}
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                                <AvatarImage src={question.author.avatar_url || undefined} />
+                                <AvatarFallback>
+                                    <UserIcon className="h-5 w-5" />
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <div className="font-medium text-gray-900">{question.author.full_name || question.author.name}</div>
+                                <div className="text-sm text-gray-600">
+                                    {question.scope === 'lesson' && question.scope_title && (
+                                        <span>Lecture {question.scope_id}</span>
+                                    )}
+                                    {question.scope !== 'lesson' && question.scope_title && (
+                                        <span>{question.scope_title}</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    )}
 
-                    {/* Question voting */}
-                    <div className="flex items-center gap-2 mt-4">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleVoteQuestion('up')}
-                            disabled={!user}
-                            className="h-8 w-8 p-0 hover:bg-green-50"
-                        >
-                            <ThumbsUp className="h-4 w-4" />
-                        </Button>
-                        <span className="text-sm font-medium">{question.vote_score || 0}</span>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleVoteQuestion('down')}
-                            disabled={!user}
-                            className="h-8 w-8 p-0 hover:bg-red-50"
-                        >
-                            <ThumbsDown className="h-4 w-4" />
-                        </Button>
+                        {/* Time Posted */}
+                        <div className="text-sm text-gray-600">
+                            {formatDistanceToNow(new Date(question.created_at), {
+                                addSuffix: true,
+                                locale: vi
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Right Side - Upvotes and Actions */}
+                    <div className="flex items-center gap-3">
+                        {/* Upvote Count */}
+                        <div className="flex items-center gap-2 text-sm">
+                            <ThumbsUp className="h-4 w-4 text-gray-500" />
+                            <span className="font-medium">{question.vote_score || 0}</span>
+                        </div>
                     </div>
                 </div>
 
-                <Separator />
+                {/* Question Content */}
+                <div className="mb-8">
+                    <div className="prose max-w-none text-gray-800 leading-relaxed">
+                        {/* Enhanced content renderer with code highlighting */}
+                        <div
+                            className="whitespace-pre-wrap"
+                            dangerouslySetInnerHTML={{
+                                __html: question.content
+                                    // Simple code highlighting - wrap code in backticks with styling
+                                    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-orange-600 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
+                                    // Block code with triple backticks
+                                    .replace(/```([^`]+)```/g, '<pre class="bg-gray-100 border border-gray-200 rounded-lg p-4 my-4 overflow-x-auto"><code class="text-orange-600 font-mono text-sm">$1</code></pre>')
+                            }}
+                        />
+                    </div>
 
-                {/* Answers Section */}
-                <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">
-                        Câu trả lời ({answers.length})
-                    </h3>
+                    {/* Optional ending like "GLHF!" */}
+                    {question.content.toLowerCase().includes('glhf') && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <p className="text-gray-600 text-sm italic">GLHF!</p>
+                        </div>
+                    )}
+                </div>
 
-                    {/* Answer Form */}
+                {/* Replies Section */}
+                <div className="border-t border-gray-200 pt-8">
+                    {/* Replies Header */}
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            {answers.length} replies
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" className="text-sm text-gray-600">
+                                Follow replies
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Replies List */}
+                    {answers.length === 0 ? (
+                        <div className="text-center py-12">
+                            <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                No replies yet
+                            </h3>
+                            <p className="text-gray-600 mb-4">
+                                Be the first to reply to this question!
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {answers.map((answer, index) => (
+                                <div key={answer.id} className="pl-4 border-l-2 border-gray-100">
+                                    {/* Reply Header */}
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={answer.author.avatar_url || undefined} />
+                                                <AvatarFallback>
+                                                    <UserIcon className="h-4 w-4" />
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-gray-900">
+                                                        {answer.author.full_name || answer.author.name || 'Anonymous'}
+                                                    </span>
+                                                    {answer.author.role === 'instructor' && (
+                                                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                                                            Instructor
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {formatDistanceToNow(new Date(answer.created_at), {
+                                                        addSuffix: true,
+                                                        locale: vi
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            {/* Vote Controls */}
+                                            {user && (
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleVoteAnswer(answer.id, 'up')}
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <ThumbsUp className="h-4 w-4" />
+                                                    </Button>
+                                                    <span className="text-sm font-medium min-w-[20px] text-center">
+                                                        {answer.vote_score || 0}
+                                                    </span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleVoteAnswer(answer.id, 'down')}
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <ThumbsDown className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Reply Content */}
+                                    <div className="ml-11 mb-4">
+                                        <div
+                                            className="prose max-w-none text-gray-700 leading-relaxed"
+                                            dangerouslySetInnerHTML={{
+                                                __html: answer.content
+                                                    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-orange-600 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
+                                                    .replace(/```([^`]+)```/g, '<pre class="bg-gray-100 border border-gray-200 rounded-lg p-4 my-4 overflow-x-auto"><code class="text-orange-600 font-mono text-sm">$1</code></pre>')
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Reply Border */}
+                                    {index < answers.length - 1 && (
+                                        <div className="ml-11 mt-6 border-b border-gray-100"></div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Add Reply Section */}
                     {user && (
-                        <Card className="border-blue-200 bg-blue-50/30">
-                            <CardContent className="pt-4">
-                                <Textarea
-                                    placeholder="Viết câu trả lời của bạn..."
-                                    value={newAnswer}
-                                    onChange={(e) => setNewAnswer(e.target.value)}
-                                    className="min-h-[100px] bg-white"
-                                />
-                                <div className="flex justify-end mt-3">
+                        <div className="mt-8 pt-6 border-t border-gray-200">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2 text-gray-700">
+                                        Add a reply
+                                    </label>
+                                    <Textarea
+                                        placeholder="Share your knowledge and help answer this question..."
+                                        value={newAnswer}
+                                        onChange={(e) => setNewAnswer(e.target.value)}
+                                        className="min-h-[120px]"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3">
                                     <Button
                                         onClick={handleSubmitAnswer}
                                         disabled={!newAnswer.trim() || submittingAnswer}
-                                        size="sm"
                                     >
-                                        <Send className="h-4 w-4 mr-2" />
-                                        {submittingAnswer ? 'Đang gửi...' : 'Gửi câu trả lời'}
+                                        {submittingAnswer ? 'Posting...' : 'Post Reply'}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setNewAnswer('')}
+                                    >
+                                        Cancel
                                     </Button>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* Answers List */}
-                    <div className="max-h-96 overflow-y-auto">
-                        <div className="space-y-4 pr-4">
-                            {answers.length > 0 ? (
-                                answers.map((answer) => (
-                                    <Card key={answer.id} className="border-gray-200">
-                                        <CardContent className="pt-4">
-                                            <div className="flex items-start gap-3">
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={answer.author.avatar_url || undefined} />
-                                                    <AvatarFallback>
-                                                        <UserIcon className="h-4 w-4" />
-                                                    </AvatarFallback>
-                                                </Avatar>
-
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <p className="font-medium text-sm">{answer.author.full_name}</p>
-                                                        {answer.is_accepted && (
-                                                            <Badge className="bg-green-500 text-white">
-                                                                <Award className="h-3 w-3 mr-1" />
-                                                                Được chấp nhận
-                                                            </Badge>
-                                                        )}
-                                                        <p className="text-xs text-gray-500">
-                                                            {formatDistanceToNow(new Date(answer.created_at), {
-                                                                addSuffix: true,
-                                                                locale: vi
-                                                            })}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="prose prose-sm max-w-none mb-3">
-                                                        <div dangerouslySetInnerHTML={{ __html: answer.content.replace(/\n/g, '<br>') }} />
-                                                    </div>
-
-                                                    <div className="flex items-center gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleVoteAnswer(answer.id, 'up')}
-                                                            disabled={!user}
-                                                            className="h-8 w-8 p-0 hover:bg-green-50"
-                                                        >
-                                                            <ThumbsUp className="h-4 w-4" />
-                                                        </Button>
-                                                        <span className="text-sm font-medium">{answer.vote_score || 0}</span>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleVoteAnswer(answer.id, 'down')}
-                                                            disabled={!user}
-                                                            className="h-8 w-8 p-0 hover:bg-red-50"
-                                                        >
-                                                            <ThumbsDown className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))
-                            ) : (
-                                <div className="text-center text-gray-500 py-8">
-                                    <MessageCircle className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                                    <p>Chưa có câu trả lời nào</p>
-                                    {user && (
-                                        <p className="text-sm">Hãy là người đầu tiên trả lời câu hỏi này!</p>
-                                    )}
-                                </div>
-                            )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </CardContent>
         </Card>

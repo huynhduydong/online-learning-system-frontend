@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import {
   MessageSquare,
   Plus,
@@ -48,6 +48,7 @@ export function LessonQASection({
 }: LessonQASectionProps) {
   console.log('LessonQASection rendered with lessonId:', lessonId, 'courseId:', courseId)
 
+  const router = useRouter()
   const { user } = useAuth()
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
@@ -131,7 +132,7 @@ export function LessonQASection({
 
   const handleVote = async (questionId: string, voteType: 'up' | 'down') => {
     try {
-      await qaService.voteQuestion(questionId, voteType)
+      await qaService.voteQuestion(parseInt(questionId), voteType)
       // Refresh questions to show updated vote counts
       setRefreshTrigger(prev => prev + 1)
     } catch (err) {
@@ -141,7 +142,7 @@ export function LessonQASection({
 
   const handlePin = async (questionId: string) => {
     try {
-      await qaService.toggleQuestionPin(questionId)
+      await qaService.toggleQuestionPin(parseInt(questionId))
       setRefreshTrigger(prev => prev + 1)
     } catch (err) {
       console.error('Error pinning question:', err)
@@ -292,26 +293,27 @@ export function LessonQASection({
             ) : (
               <div className="space-y-4">
                 {questions.map((question) => (
-                  <QuestionCard
-                    key={question.id}
-                    question={question}
-                    currentUser={user}
-                    showLesson={false}
-                    showCourse={false}
-                    onVote={handleVote}
-                    onPin={handlePin}
-                    onExpand={() => handleQuestionExpand(question.id)}
-                  />
-                ))}
+                  <React.Fragment key={question.id}>
+                    <QuestionCard
+                      question={question}
+                      currentUser={user as any}
+                      showLesson={false}
+                      showCourse={false}
+                      onVote={handleVote}
+                      onPin={handlePin}
+                      onExpand={() => handleQuestionExpand(question.id)}
+                    />
 
-                {/* Expanded Question Detail */}
-                {expandedQuestionId && (
-                  <QuestionDetailExpansion
-                    questionId={expandedQuestionId}
-                    onClose={handleQuestionClose}
-                    className="mt-6"
-                  />
-                )}
+                    {/* Expanded Question Detail - render right after this question if it's expanded */}
+                    {expandedQuestionId === question.id && (
+                      <QuestionDetailExpansion
+                        questionId={expandedQuestionId}
+                        onClose={handleQuestionClose}
+                        className="mt-4 mb-6"
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
 
                 {hasMore && (
                   <div className="text-center pt-4">
