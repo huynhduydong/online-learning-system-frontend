@@ -80,9 +80,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     const adminSidebarItems = [
         { icon: BarChart3, label: 'Dashboard', href: '/admin' },
         { icon: Users, label: 'Quản lý người dùng', href: '/admin/users' },
-        { icon: BookOpen, label: 'Quản lý khóa học', href: '/admin/courses' },
-        { icon: UserCheck, label: 'Quản lý giảng viên', href: '/admin/instructors' },
-        { icon: Database, label: 'Dữ liệu hệ thống', href: '/admin/analytics' },
         { icon: FileText, label: 'Báo cáo', href: '/admin/reports' },
         { icon: Shield, label: 'Bảo mật', href: '/admin/security' },
         { icon: Settings, label: 'Cài đặt hệ thống', href: '/admin/settings' },
