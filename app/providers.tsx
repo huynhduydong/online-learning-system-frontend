@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes"
 import { useState } from "react"
 import { MSWProvider } from "@/mocks/msw-provider"
 import { AuthProvider } from "@/contexts/auth-context"
+import { NotificationProvider } from "@/contexts/notification-context"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -27,8 +28,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            {children}
-            {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+            <NotificationProvider>
+              {children}
+              {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, Plus, GraduationCap } from 'lucide-react'
+import { BookOpen, Plus, GraduationCap, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
@@ -15,16 +15,22 @@ interface StudioLayoutProps {
 
 const navigationItems = [
   {
-    title: 'My Courses',
+    title: 'Khóa Học Của Tôi',
     href: '/studio',
     icon: BookOpen,
-    description: 'Manage your courses'
+    description: 'Quản lý khóa học của bạn'
   },
   {
-    title: 'Create Course',
+    title: 'Tạo Khóa Học',
     href: '/studio/create',
     icon: Plus,
-    description: 'Create a new course'
+    description: 'Tạo khóa học mới'
+  },
+  {
+    title: 'Bảng Điều Khiển',
+    href: '/studio/admin',
+    icon: BarChart3,
+    description: 'Phân tích và thống kê'
   }
 ]
 
@@ -38,7 +44,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading instructor studio...</p>
+          <p className="text-muted-foreground">Đang tải studio giảng viên...</p>
         </div>
       </div>
     )
@@ -49,9 +55,9 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Please log in to access Instructor Studio</p>
+          <p className="text-muted-foreground mb-4">Vui lòng đăng nhập để truy cập Studio Giảng Viên</p>
           <Button asChild>
-            <Link href="/login">Go to Login</Link>
+            <Link href="/login">Đi đến Đăng Nhập</Link>
           </Button>
         </div>
       </div>
@@ -68,9 +74,9 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Access denied. Instructor role required.</p>
+          <p className="text-muted-foreground mb-4">Truy cập bị từ chối. Cần quyền giảng viên.</p>
           <Button asChild variant="outline">
-            <Link href="/dashboard">Back to Dashboard</Link>
+            <Link href="/dashboard">Quay lại Bảng Điều Khiển</Link>
           </Button>
         </div>
       </div>
@@ -92,14 +98,14 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <GraduationCap className="h-4 w-4 text-primary-foreground" />
                 </div>
-                <span className="font-bold text-lg">Instructor Studio</span>
+                <span className="font-bold text-lg">Studio Giảng Viên</span>
               </Link>
             </div>
 
             {/* User Info */}
             <div className="flex items-center space-x-4">
               <span className="text-sm text-muted-foreground">
-                Welcome, {user?.first_name || user?.full_name}
+                Chào mừng, {user?.first_name || user?.full_name}
               </span>
               {process.env.NODE_ENV === 'development' && user?.role !== 'instructor' && (
                 <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
@@ -107,7 +113,7 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
                 </span>
               )}
               <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard">Exit Studio</Link>
+                <Link href="/dashboard">Thoát Studio</Link>
               </Button>
             </div>
           </div>

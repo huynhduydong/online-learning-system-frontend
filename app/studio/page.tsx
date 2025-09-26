@@ -81,13 +81,13 @@ export default function StudioPage() {
         <AppContainer className="py-8">
           <div className="flex items-center justify-between mb-8">
             <PageHeading
-              title="My Courses"
-              description="Manage and create your courses"
+              title="Khóa Học Của Tôi"
+              description="Quản lý và tạo khóa học"
             />
             <Button asChild>
               <Link href="/studio/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Create New Course
+                Tạo Khóa Học Mới
               </Link>
             </Button>
           </div>
@@ -104,13 +104,13 @@ export default function StudioPage() {
         <AppContainer className="py-8">
           <div className="flex items-center justify-between mb-8">
             <PageHeading
-              title="My Courses"
-              description="Manage and create your courses"
+              title="Khóa Học Của Tôi"
+              description="Quản lý và tạo khóa học"
             />
             <Button asChild>
               <Link href="/studio/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Create New Course
+                Tạo Khóa Học Mới
               </Link>
             </Button>
           </div>
@@ -182,7 +182,7 @@ export default function StudioPage() {
                         </Badge>
                         {course.status === 'published' && (
                           <span className="text-sm text-muted-foreground">
-                            {course.stats.total_enrollments} students
+                            {course.stats.total_enrollments} học viên
                           </span>
                         )}
                       </div>
