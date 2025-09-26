@@ -149,9 +149,9 @@ export class QAService {
   /**
    * Get a specific question with answers and comments
    */
-  async getQuestion(questionId: number): Promise<QuestionDetail> {
+  async getQuestion(questionId: number): Promise<Question> {
     try {
-      const response = await this.client.get<ApiQuestionResponse>(`/qa/questions/${questionId}`)
+      const response = await this.client.get<ApiQuestionResponse>(`/questions/${questionId}`)
 
       if (response.success && response.data) {
         return response.data
@@ -201,7 +201,7 @@ export class QAService {
       console.log('JSON payload stringified:', JSON.stringify(jsonData))
       console.log('=== END DEBUG ===')
 
-      const response = await this.client.post<ApiCreateQuestionResponse>('/qa/questions', jsonData)
+      const response = await this.client.post<ApiCreateQuestionResponse>('/questions', jsonData)
 
       if (response.success && response.data) {
         return response.data
@@ -219,7 +219,7 @@ export class QAService {
    */
   async updateQuestion(questionId: number, data: UpdateQuestionRequest): Promise<Question> {
     try {
-      const response = await this.client.put<ApiCreateQuestionResponse>(`/qa/questions/${questionId}`, data)
+      const response = await this.client.put<ApiCreateQuestionResponse>(`/questions/${questionId}`, data)
 
       if (response.success && response.data) {
         return response.data
@@ -237,7 +237,7 @@ export class QAService {
    */
   async deleteQuestion(questionId: number): Promise<void> {
     try {
-      const response = await this.client.delete(`/qa/questions/${questionId}`)
+      const response = await this.client.delete(`/questions/${questionId}`)
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to delete question')
@@ -253,7 +253,7 @@ export class QAService {
    */
   async toggleQuestionPin(questionId: number): Promise<Question> {
     try {
-      const response = await this.client.post<ApiCreateQuestionResponse>(`/qa/questions/${questionId}/pin`)
+      const response = await this.client.post<ApiCreateQuestionResponse>(`/questions/${questionId}/pin`)
 
       if (response.success && response.data) {
         return response.data
@@ -271,7 +271,7 @@ export class QAService {
    */
   async toggleQuestionFeature(questionId: number): Promise<Question> {
     try {
-      const response = await this.client.post<ApiCreateQuestionResponse>(`/qa/questions/${questionId}/feature`)
+      const response = await this.client.post<ApiCreateQuestionResponse>(`/questions/${questionId}/feature`)
 
       if (response.success && response.data) {
         return response.data
@@ -289,7 +289,7 @@ export class QAService {
    */
   async closeQuestion(questionId: number): Promise<Question> {
     try {
-      const response = await this.client.post<ApiCreateQuestionResponse>(`/qa/questions/${questionId}/close`)
+      const response = await this.client.post<ApiCreateQuestionResponse>(`/questions/${questionId}/close`)
 
       if (response.success && response.data) {
         return response.data
@@ -307,13 +307,21 @@ export class QAService {
   /**
    * Get answers for a question
    */
-  async getAnswers(questionId: number, page = 1, perPage = 10): Promise<ApiAnswersResponse['data']> {
+  async getAnswers(questionId: number, page = 1, perPage = 10): Promise<{ answers: Answer[], pagination: any }> {
     try {
-      const response = await this.client.get<ApiAnswersResponse>(`/qa/questions/${questionId}/answers`, {
+      const response = await this.client.get<ApiAnswersResponse>(`/answers/question/${questionId}`, {
         params: { page, per_page: perPage }
       })
 
       if (response.success && response.data) {
+        // Handle new API format with nested data structure
+        if (response.data.data && Array.isArray(response.data.data)) {
+          return {
+            answers: response.data.data,
+            pagination: response.data.pagination || {}
+          }
+        }
+        // Fallback for legacy format
         return response.data
       }
 
@@ -329,23 +337,12 @@ export class QAService {
    */
   async createAnswer(data: CreateAnswerRequest): Promise<Answer> {
     try {
-      const formData = new FormData()
-
-      formData.append('question_id', data.question_id.toString())
-      formData.append('content', data.content)
-
-      // Add attachments
-      if (data.attachments) {
-        data.attachments.forEach((file, index) => {
-          formData.append(`attachments[${index}]`, file)
-        })
+      // Use JSON format for the new API
+      const jsonData = {
+        content: data.content
       }
 
-      const response = await this.client.post<ApiCreateAnswerResponse>('/qa/answers', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+      const response = await this.client.post<ApiCreateAnswerResponse>(`/answers/question/${data.question_id}`, jsonData)
 
       if (response.success && response.data) {
         return response.data
@@ -363,7 +360,7 @@ export class QAService {
    */
   async updateAnswer(answerId: number, data: UpdateAnswerRequest): Promise<Answer> {
     try {
-      const response = await this.client.put<ApiCreateAnswerResponse>(`/qa/answers/${answerId}`, data)
+      const response = await this.client.put<ApiCreateAnswerResponse>(`/answers/${answerId}`, data)
 
       if (response.success && response.data) {
         return response.data
@@ -381,7 +378,7 @@ export class QAService {
    */
   async deleteAnswer(answerId: number): Promise<void> {
     try {
-      const response = await this.client.delete(`/qa/answers/${answerId}`)
+      const response = await this.client.delete(`/answers/${answerId}`)
 
       if (!response.success) {
         throw new Error(response.message || 'Failed to delete answer')
@@ -397,7 +394,7 @@ export class QAService {
    */
   async acceptAnswer(answerId: number): Promise<Answer> {
     try {
-      const response = await this.client.post<ApiCreateAnswerResponse>(`/qa/answers/${answerId}/accept`)
+      const response = await this.client.post<ApiCreateAnswerResponse>(`/answers/${answerId}/accept`)
 
       if (response.success && response.data) {
         return response.data
@@ -415,7 +412,7 @@ export class QAService {
    */
   async toggleAnswerPin(answerId: number): Promise<Answer> {
     try {
-      const response = await this.client.post<ApiCreateAnswerResponse>(`/qa/answers/${answerId}/pin`)
+      const response = await this.client.post<ApiCreateAnswerResponse>(`/answers/${answerId}/pin`)
 
       if (response.success && response.data) {
         return response.data
@@ -514,7 +511,7 @@ export class QAService {
    */
   async voteQuestion(questionId: number, voteType: 'up' | 'down'): Promise<ApiVoteResponse['data']> {
     try {
-      const response = await this.client.post<ApiVoteResponse>(`/qa/questions/${questionId}/vote`, {
+      const response = await this.client.post<ApiVoteResponse>(`/questions/${questionId}/vote`, {
         vote_type: voteType
       })
 
@@ -534,7 +531,7 @@ export class QAService {
    */
   async voteAnswer(answerId: number, voteType: 'up' | 'down'): Promise<ApiVoteResponse['data']> {
     try {
-      const response = await this.client.post<ApiVoteResponse>(`/qa/answers/${answerId}/vote`, {
+      const response = await this.client.post<ApiVoteResponse>(`/answers/${answerId}/vote`, {
         vote_type: voteType
       })
 
@@ -554,7 +551,7 @@ export class QAService {
    */
   async removeQuestionVote(questionId: number): Promise<ApiVoteResponse['data']> {
     try {
-      const response = await this.client.delete<ApiVoteResponse>(`/qa/questions/${questionId}/vote`)
+      const response = await this.client.delete<ApiVoteResponse>(`/questions/${questionId}/vote`)
 
       if (response.success && response.data) {
         return response.data
@@ -572,7 +569,7 @@ export class QAService {
    */
   async removeAnswerVote(answerId: number): Promise<ApiVoteResponse['data']> {
     try {
-      const response = await this.client.delete<ApiVoteResponse>(`/qa/answers/${answerId}/vote`)
+      const response = await this.client.delete<ApiVoteResponse>(`/answers/${answerId}/vote`)
 
       if (response.success && response.data) {
         return response.data
@@ -736,7 +733,7 @@ export class QAService {
   async getRelatedQuestions(questionId: number, limit = 5): Promise<Question[]> {
     try {
       const response = await this.client.get<{ success: boolean; message: string; data: Question[] }>(
-        `/qa/questions/${questionId}/related`,
+        `/questions/${questionId}/related`,
         { params: { limit } }
       )
 
@@ -761,7 +758,7 @@ export class QAService {
       if (scopeId) params.scope_id = scopeId
 
       const response = await this.client.get<{ success: boolean; message: string; data: Question[] }>(
-        '/qa/questions/suggestions',
+        '/questions/suggestions',
         { params }
       )
 

@@ -701,7 +701,7 @@ export interface ApiCoursesByCategoryResponse {
 export type QuestionStatus = 'new' | 'in_progress' | 'answered' | 'closed'
 
 // Question Categories
-export type QuestionCategory = 
+export type QuestionCategory =
   | 'general'             // Câu hỏi chung
   | 'technical'           // Câu hỏi kỹ thuật
   | 'technical_question'  // Câu hỏi kỹ thuật (new API format)
@@ -864,7 +864,7 @@ export interface UpdateQuestionRequest {
 export interface CreateAnswerRequest {
   question_id: number
   content: string
-  attachments?: File[]
+  attachments?: File[] // Note: Not supported in current API implementation
 }
 
 // Answer update request
@@ -971,7 +971,7 @@ export interface LegacyApiQuestionsResponse {
 export interface ApiQuestionResponse {
   success: boolean
   message: string
-  data: QuestionDetail
+  data: Question
 }
 
 export interface ApiCreateQuestionResponse {

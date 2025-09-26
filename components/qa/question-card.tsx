@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import {
@@ -34,6 +33,7 @@ interface QuestionCardProps {
   compact?: boolean
   onVote?: (questionId: string, voteType: 'up' | 'down') => void
   onPin?: (questionId: string) => void
+  onExpand?: () => void
   className?: string
 }
 
@@ -91,6 +91,7 @@ export function QuestionCard({
   compact = false,
   onVote,
   onPin,
+  onExpand,
   className = ''
 }: QuestionCardProps) {
   const questionPermissions = useQuestionPermissions(currentUser, {
@@ -146,15 +147,15 @@ export function QuestionCard({
               )}
             </div>
 
-            <Link
-              href={`/qa/questions/${question.id}`}
-              className="block group"
+            <div
+              onClick={onExpand}
+              className="block group cursor-pointer"
             >
               <h3 className={`font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 ${compact ? 'text-sm' : 'text-base'
                 }`}>
                 {question.title}
               </h3>
-            </Link>
+            </div>
 
             {!compact && question.content && (
               <p className="text-sm text-gray-600 mt-2 line-clamp-2">

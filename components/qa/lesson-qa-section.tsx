@@ -28,6 +28,7 @@ import {
 
 import { QuestionCard } from './question-card'
 import { QuestionForm } from './question-form'
+import { QuestionDetailExpansion } from './question-detail-expansion'
 import { qaService } from '@/lib/api/qa'
 import { useAuth } from '@/contexts/auth-context'
 import type { Question, QuestionQueryParams } from '@/lib/api/types'
@@ -59,6 +60,7 @@ export function LessonQASection({
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [expandedQuestionId, setExpandedQuestionId] = useState<number | null>(null)
 
   // Load questions for this lesson
   useEffect(() => {
@@ -117,6 +119,14 @@ export function LessonQASection({
     setActiveTab('questions')
     setPage(1)
     setRefreshTrigger(prev => prev + 1)
+  }
+
+  const handleQuestionExpand = (questionId: number) => {
+    setExpandedQuestionId(questionId)
+  }
+
+  const handleQuestionClose = () => {
+    setExpandedQuestionId(null)
   }
 
   const handleVote = async (questionId: string, voteType: 'up' | 'down') => {
@@ -290,8 +300,18 @@ export function LessonQASection({
                     showCourse={false}
                     onVote={handleVote}
                     onPin={handlePin}
+                    onExpand={() => handleQuestionExpand(question.id)}
                   />
                 ))}
+
+                {/* Expanded Question Detail */}
+                {expandedQuestionId && (
+                  <QuestionDetailExpansion
+                    questionId={expandedQuestionId}
+                    onClose={handleQuestionClose}
+                    className="mt-6"
+                  />
+                )}
 
                 {hasMore && (
                   <div className="text-center pt-4">
