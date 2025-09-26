@@ -126,13 +126,54 @@ class LessonsService {
     private client = apiClient
 
     /**
+     * Maps API lesson response to internal LessonDetails format
+     * @param data API response data
+     * @returns Formatted lesson details
+     */
+    private mapLessonDetailsResponse(data: any): LessonDetails {
+        return {
+            id: data.id,
+            title: data.title,
+            description: data.description || '',
+            content_type: data.content_type || 'video',
+            duration_minutes: data.duration_minutes || 0,
+            sort_order: data.sort_order || 0,
+            is_preview: data.is_preview || false,
+            contents: Array.isArray(data.contents) ? data.contents.map((content: any) => ({
+                id: content.id,
+                title: content.title || '',
+                content_data: content.content_data,
+                file_url: content.file_url,
+                sort_order: content.sort_order || 0
+            })) : [],
+            progress: {
+                status: data.progress?.status || 'not_started',
+                completion_percentage: data.progress?.completion_percentage || 0,
+                watch_time_seconds: data.progress?.watch_time_seconds || 0,
+                is_completed: data.progress?.is_completed || false,
+                started_at: data.progress?.started_at,
+                completed_at: data.progress?.completed_at,
+                last_accessed_at: data.progress?.last_accessed_at
+            }
+        };
+    }
+
+    /**
      * Get course with all lessons and modules
      * GET /api/courses/{courseSlug}/lessons
      */
     async getCourseWithLessons(courseSlug: string): Promise<CourseWithLessons> {
         try {
+            // Thêm các tham số scope và page
+            const queryParams = new URLSearchParams({
+                scope: 'course',
+                scope_id: courseSlug,
+                page: '1',
+                per_page: '50'
+            }).toString()
+            
             const response = await this.client.get<CourseWithLessons>(
-                `/courses/${courseSlug}/lessons`
+                `/courses/${courseSlug}/lessons?${queryParams}`
             )
 
             if (response.success && response.data) {
@@ -152,18 +193,27 @@ class LessonsService {
      */
     async getLessonDetails(courseSlug: string, lessonId: number): Promise<LessonDetails> {
         try {
-            const response = await this.client.get<LessonDetails>(
-                `/courses/${courseSlug}/lessons/${lessonId}`
-            )
+            // Tạo URL với tham số query
+            const baseUrl = `/courses/${courseSlug}/lessons/${lessonId}`;
+            const params = new URLSearchParams({
+                scope: 'lesson',
+                scope_id: lessonId.toString(),
+                page: '1',
+                per_page: '20'
+            });
+            
+            const url = `${baseUrl}?${params.toString()}`;
+            console.log('Calling API with URL:', url);
+            const response = await this.client.get<ApiLessonResponse>(url);
 
             if (response.success && response.data) {
-                return response.data
+                return this.mapLessonDetailsResponse(response.data);
             }
 
-            throw new Error(response.error || 'Failed to fetch lesson details')
+            throw new Error(response.error || 'Failed to fetch lesson details');
         } catch (error) {
-            console.error('Get lesson details error:', error)
-            throw error
+            console.error('Get lesson details error:', error);
+            throw error;
         }
     }
 

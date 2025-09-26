@@ -90,6 +90,21 @@ export interface InstructorCoursesParams {
   sort_order?: 'asc' | 'desc'
 }
 
+export interface InstructorStats {
+  total_courses: number
+  published_courses: number
+  draft_courses: number
+  total_students: number
+  total_revenue: number
+  this_month_revenue: number
+  avg_rating: number
+  total_reviews: number
+}
+
+export interface InstructorStatsResponse extends ApiResponse {
+  data: InstructorStats
+}
+
 // Module and Lesson Management Types
 export interface InstructorModule {
   id: number
@@ -222,6 +237,20 @@ class InstructorService {
    */
   async deleteCourse(id: number): Promise<ApiResponse> {
     return this.client.delete<ApiResponse>(`/instructor/courses/${id}`)
+  }
+
+  /**
+   * Duplicate course
+   */
+  async duplicateCourse(id: number): Promise<InstructorCourseDetailResponse> {
+    return this.client.post<InstructorCourseDetailResponse>(`/instructor/courses/${id}/duplicate`, {})
+  }
+
+  /**
+   * Get instructor statistics
+   */
+  async getCourseStats(): Promise<InstructorStatsResponse> {
+    return this.client.get<InstructorStatsResponse>('/instructor/stats')
   }
 
   /**

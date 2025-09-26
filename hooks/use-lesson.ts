@@ -78,30 +78,46 @@ export function useLesson({ courseSlug, lessonId }: UseLessonOptions): UseLesson
 
     // Fetch all data
     const fetchData = useCallback(async () => {
-        if (!courseSlug || !numericLessonId) return
+        if (!courseSlug || !numericLessonId) {
+            console.log('useLesson: Missing courseSlug or lessonId', { courseSlug, lessonId: numericLessonId })
+            return
+        }
 
+        console.log('useLesson: Starting fetchData', { courseSlug, lessonId: numericLessonId })
         setIsLoading(true)
         setError(null)
-
+    
         try {
-            // Fetch course data and lesson details in parallel
-            const [courseData] = await Promise.all([
+            const [courseData, lessonData] = await Promise.all([
                 fetchCourseData(),
                 fetchLessonDetails()
             ])
-
-            // Verify lesson exists in course
-            const lessonExists = courseData?.modules.some(module =>
-                module.lessons.some(lesson => lesson.id === numericLessonId)
-            )
-
-            if (!lessonExists) {
-                throw new Error('Lesson not found in this course')
+    
+            console.log('useLesson: Fetched data', { courseData, lessonData })
+    
+            if (!courseData || !lessonData) {
+                console.log('useLesson: Missing data', { courseData, lessonData })
+                setError('Không thể tải dữ liệu khóa học hoặc bài học')
+                return
             }
-
+    
+            // Verify lesson belongs to course
+            const lessonExists = courseData.modules?.some(module =>
+                module.lessons?.some(lesson => lesson.id === numericLessonId)
+            )
+    
+            if (!lessonExists) {
+                console.log('useLesson: Lesson not found in course', { lessonId: numericLessonId, courseData })
+                setError('Bài học không tồn tại trong khóa học này')
+                return
+            }
+    
+            setCourse(courseData)
+            setCurrentLesson(lessonData)
+            console.log('useLesson: Successfully set data', { course: courseData, currentLesson: lessonData })
         } catch (err) {
-            console.error('Failed to fetch lesson data:', err)
-            setError(err instanceof Error ? err.message : 'Failed to load lesson')
+            console.error('useLesson: Error fetching data:', err)
+            setError('Có lỗi xảy ra khi tải dữ liệu')
         } finally {
             setIsLoading(false)
         }

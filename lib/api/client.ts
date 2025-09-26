@@ -63,6 +63,7 @@ export class ApiClientError extends Error {
 // Request configuration interface
 interface RequestConfig extends RequestInit {
   timeout?: number
+  params?: Record<string, any>
 }
 
 // API Client class
@@ -82,6 +83,7 @@ class ApiClient {
     const {
       timeout = this.defaultTimeout,
       headers = {},
+      params,
       ...restOptions
     } = options
 
@@ -102,8 +104,25 @@ class ApiClient {
         (requestHeaders as Record<string, string>)['Authorization'] = `Bearer ${token}`
       }
 
-      // Make the request
-      const url = getApiUrl(endpoint)
+      // Build URL with query parameters
+      let url = getApiUrl(endpoint)
+      if (params && Object.keys(params).length > 0) {
+        const searchParams = new URLSearchParams()
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            if (Array.isArray(value)) {
+              value.forEach(item => searchParams.append(key, String(item)))
+            } else {
+              searchParams.append(key, String(value))
+            }
+          }
+        })
+        url += '?' + searchParams.toString()
+        console.log('API Client - Final URL with params:', url)
+      } else {
+        console.log('API Client - URL without params:', url)
+      }
+
       const response = await fetch(url, {
         ...restOptions,
         headers: requestHeaders,
@@ -259,6 +278,9 @@ class ApiClient {
 
 // Export singleton instance
 export const apiClient = new ApiClient()
+
+// Export class for creating new instances
+export { ApiClient }
 
 // Export utilities
 export { tokenManager as auth }
