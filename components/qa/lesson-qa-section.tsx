@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { 
-  MessageSquare, 
-  Plus, 
-  Search, 
+import {
+  MessageSquare,
+  Plus,
+  Search,
   Filter,
   ChevronDown,
   AlertCircle,
@@ -39,14 +39,14 @@ interface LessonQASectionProps {
   className?: string
 }
 
-export function LessonQASection({ 
-  lessonId, 
-  courseId, 
-  lessonTitle, 
-  className = '' 
+export function LessonQASection({
+  lessonId,
+  courseId,
+  lessonTitle,
+  className = ''
 }: LessonQASectionProps) {
   console.log('LessonQASection rendered with lessonId:', lessonId, 'courseId:', courseId)
-  
+
   const { user } = useAuth()
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
@@ -74,7 +74,7 @@ export function LessonQASection({
         scope: 'lesson',
         scope_id: parseInt(lessonId),
         page,
-        per_page: 10,
+        per_page: 20,
         sort_by: sortBy as any,
       }
 
@@ -85,17 +85,17 @@ export function LessonQASection({
       console.log('Making API call to getQuestions with params:', params)
       const response = await qaService.getQuestions(params)
       console.log('API response received:', response)
-      
+
       if (page === 1) {
         setQuestions(response.questions)
       } else {
         setQuestions(prev => [...prev, ...response.questions])
       }
-      
+
       setHasMore(response.pagination?.has_next || response.pagination?.page < response.pagination?.totalPages)
     } catch (err) {
       console.error('Error loading questions:', err)
-      
+
       // Handle specific database schema errors
       if (err instanceof Error) {
         if (err.name === 'DatabaseSchemaError' || err.name === 'VoteSchemaError') {
@@ -295,8 +295,8 @@ export function LessonQASection({
 
                 {hasMore && (
                   <div className="text-center pt-4">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={loadMore}
                       disabled={loading}
                     >

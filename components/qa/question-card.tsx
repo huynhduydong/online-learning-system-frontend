@@ -4,12 +4,12 @@ import React from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { vi } from 'date-fns/locale'
-import { 
-  MessageCircle, 
-  ThumbsUp, 
-  Eye, 
-  Pin, 
-  CheckCircle, 
+import {
+  MessageCircle,
+  ThumbsUp,
+  Eye,
+  Pin,
+  CheckCircle,
   Clock,
   User as UserIcon,
   Tag
@@ -83,11 +83,11 @@ const categoryConfig = {
   }
 }
 
-export function QuestionCard({ 
-  question, 
+export function QuestionCard({
+  question,
   currentUser,
-  showCourse = false, 
-  showLesson = false, 
+  showCourse = false,
+  showLesson = false,
   compact = false,
   onVote,
   onPin,
@@ -95,9 +95,9 @@ export function QuestionCard({
 }: QuestionCardProps) {
   const questionPermissions = useQuestionPermissions(currentUser, {
     id: question.id,
-    authorId: question.authorId,
-    courseId: question.courseId,
-    hasAnswers: question.answerCount > 0
+    authorId: question.author.id,
+    courseId: question.scope === 'course' ? question.scope_id : undefined,
+    hasAnswers: question.answer_count > 0
   })
   const statusInfo = statusConfig[question.status as QuestionStatus]
   const categoryInfo = categoryConfig[question.category as QuestionCategory]
@@ -121,7 +121,7 @@ export function QuestionCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              {question.isPinned && (
+              {question.is_pinned && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
@@ -133,12 +133,12 @@ export function QuestionCard({
                   </Tooltip>
                 </TooltipProvider>
               )}
-              
+
               <Badge variant="outline" className={statusInfo.color}>
                 <StatusIcon className="h-3 w-3 mr-1" />
                 {statusInfo.label}
               </Badge>
-              
+
               {categoryInfo && (
                 <Badge variant="secondary" className={categoryInfo.color}>
                   {categoryInfo.label}
@@ -146,13 +146,12 @@ export function QuestionCard({
               )}
             </div>
 
-            <Link 
+            <Link
               href={`/qa/questions/${question.id}`}
               className="block group"
             >
-              <h3 className={`font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 ${
-                compact ? 'text-sm' : 'text-base'
-              }`}>
+              <h3 className={`font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 ${compact ? 'text-sm' : 'text-base'
+                }`}>
                 {question.title}
               </h3>
             </Link>
@@ -236,12 +235,12 @@ export function QuestionCard({
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <MessageCircle className="h-4 w-4" />
-                <span>{question.answerCount || 0}</span>
+                <span>{question.answer_count || 0}</span>
               </div>
-              
+
               <div className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
-                <span>{question.viewCount || 0}</span>
+                <span>{question.view_count || 0}</span>
               </div>
             </div>
           </div>
@@ -255,15 +254,15 @@ export function QuestionCard({
                 onClick={handlePin}
                 className="h-8 w-8 p-0"
               >
-                <Pin className={`h-4 w-4 ${question.isPinned ? 'text-orange-500 fill-current' : 'text-gray-400'}`} />
+                <Pin className={`h-4 w-4 ${question.is_pinned ? 'text-orange-500 fill-current' : 'text-gray-400'}`} />
               </Button>
             )}
 
             {/* Time */}
             <span className="text-xs text-gray-500">
-              {formatDistanceToNow(new Date(question.createdAt), { 
+              {formatDistanceToNow(new Date(question.created_at), {
                 addSuffix: true,
-                locale: vi 
+                locale: vi
               })}
             </span>
           </div>

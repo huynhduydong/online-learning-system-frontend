@@ -940,16 +940,18 @@ export interface QAPagination {
 
 // API Response interfaces for Q&A
 
-// API Response for Questions (new format)
+// API Response for Questions (new format with nested data structure)
 export interface ApiQuestionsResponse {
   success: boolean
   message: string
-  data: Question[] // Direct array of questions
-  pagination: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
+  data: {
+    data: Question[] // Nested array of questions
+    pagination: {
+      total: number
+      page: number
+      limit: number
+      totalPages: number
+    }
   }
 }
 
