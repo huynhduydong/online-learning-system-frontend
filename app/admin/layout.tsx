@@ -1,39 +1,31 @@
 'use client'
 
 /**
- * Dashboard Layout Component
- * Shared layout for all dashboard pages to avoid duplication
+ * Admin Dashboard Layout Component
+ * Layout for admin-only dashboard pages with role-based access control
  */
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import {
-    BookOpen,
-    Users,
-    Award,
-    TrendingUp,
-    Clock,
-    Star,
-    Calendar,
-    Target,
-    PlayCircle,
-    CheckCircle,
     BarChart3,
-    PieChart,
+    Users,
+    BookOpen,
+    Settings,
+    Shield,
     Activity,
     Bell,
-    Settings,
     LogOut,
-    User,
     Menu,
     X,
     RefreshCw,
     AlertCircle,
-    GraduationCap
+    Database,
+    FileText,
+    UserCheck
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
     DropdownMenu,
@@ -46,92 +38,78 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 
 import { useAuth } from '@/contexts/auth-context'
-import { useDashboard } from '@/hooks/use-dashboard'
 
-interface DashboardLayoutProps {
+interface AdminLayoutProps {
     children: React.ReactNode
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-    const { user: authUser, logout } = useAuth()
+export default function AdminLayout({ children }: AdminLayoutProps) {
+    const { user, logout, isLoading } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
-    // Use dashboard hook for real API data
-    const {
-        dashboardData,
-        loading,
-        error,
-        refreshDashboard,
-    } = useDashboard()
-
-    // Get user data from dashboard data, fallback to auth user for authentication check
-    const user = dashboardData?.user || authUser
-
     useEffect(() => {
         // Check if user is authenticated
-        if (!authUser) {
+        if (!isLoading && !user) {
             router.push('/login')
             return
         }
 
-        // Redirect non-student users to appropriate dashboard
-        if (authUser && authUser.role !== 'student') {
-            switch (authUser.role) {
-                case 'admin':
-                    router.push('/admin')
-                    break
+        // Check if user has admin role
+        if (!isLoading && user && user.role !== 'admin') {
+            // Redirect non-admin users to appropriate dashboard
+            switch (user.role) {
                 case 'instructor':
                     router.push('/studio')
                     break
+                case 'student':
                 default:
-                    // Keep them here for other roles
+                    router.push('/dashboard')
                     break
             }
             return
         }
-    }, [authUser, router])
-
-    // Handle errors
-    useEffect(() => {
-        if (error) {
-            console.error('Dashboard error:', error)
-            // You could show a toast notification here
-        }
-    }, [error])
+    }, [user, isLoading, router])
 
     const handleLogout = async () => {
         await logout()
         router.push('/login')
     }
 
-    // Student-specific sidebar items only
-    const sidebarItems = [
-        { icon: BarChart3, label: 'Dashboard', href: '/dashboard' },
-        { icon: BookOpen, label: 'Khóa học của tôi', href: '/dashboard/courses' },
-        { icon: Calendar, label: 'Lịch học', href: '/dashboard/schedule' },
-        { icon: Award, label: 'Thành tích', href: '/dashboard/achievements' },
-        { icon: Activity, label: 'Tiến độ', href: '/dashboard/progress' },
-        { icon: Settings, label: 'Cài đặt', href: '/dashboard/settings' }
+    const adminSidebarItems = [
+        { icon: BarChart3, label: 'Dashboard', href: '/admin' },
+        { icon: Users, label: 'Quản lý người dùng', href: '/admin/users' },
+        { icon: BookOpen, label: 'Quản lý khóa học', href: '/admin/courses' },
+        { icon: UserCheck, label: 'Quản lý giảng viên', href: '/admin/instructors' },
+        { icon: Database, label: 'Dữ liệu hệ thống', href: '/admin/analytics' },
+        { icon: FileText, label: 'Báo cáo', href: '/admin/reports' },
+        { icon: Shield, label: 'Bảo mật', href: '/admin/security' },
+        { icon: Settings, label: 'Cài đặt hệ thống', href: '/admin/settings' },
     ]
 
     const isItemActive = (href: string) => {
-        if (href === '/dashboard') {
-            return pathname === '/dashboard'
+        if (href === '/admin') {
+            return pathname === '/admin'
         }
         return pathname.startsWith(href)
     }
 
-    if (loading && pathname === '/dashboard') {
+    // Show loading state
+    if (isLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Đang tải dashboard...</p>
+                    <p className="text-muted-foreground">Đang tải admin dashboard...</p>
                 </div>
             </div>
         )
+    }
+
+    // Don't render anything if user is not admin (redirects handled in useEffect)
+    if (!user || user.role !== 'admin') {
+        return null
     }
 
     return (
@@ -143,17 +121,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         {/* Logo */}
                         <div className="p-6 border-b">
                             <div className="flex items-center space-x-2">
-                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                                    <span className="text-primary-foreground font-bold text-sm">EL</span>
+                                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                    <Shield className="text-white h-4 w-4" />
                                 </div>
-                                <span className="font-bold text-lg">E-Learning</span>
+                                <span className="font-bold text-lg">Admin Panel</span>
                             </div>
                         </div>
 
                         {/* Navigation */}
                         <nav className="flex-1 p-4">
                             <ul className="space-y-2">
-                                {sidebarItems.map((item) => (
+                                {adminSidebarItems.map((item) => (
                                     <li key={item.href}>
                                         <Button
                                             variant={isItemActive(item.href) ? "default" : "ghost"}
@@ -177,12 +155,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage src={user?.profile_image || user?.avatar} />
                                     <AvatarFallback>
-                                        {(user?.full_name || user?.name)?.charAt(0)?.toUpperCase() || 'U'}
+                                        {(user?.full_name || user?.name)?.charAt(0)?.toUpperCase() || 'A'}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{user?.full_name || user?.name}</p>
-                                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                                    <p className="text-xs text-muted-foreground truncate">Quản trị viên</p>
                                 </div>
                             </div>
                             <Button
@@ -205,17 +183,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     {/* Logo */}
                     <div className="p-6 border-b border-border">
                         <div className="flex items-center space-x-2">
-                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                                <span className="text-primary-foreground font-bold text-sm">EL</span>
+                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                <Shield className="text-white h-4 w-4" />
                             </div>
-                            <span className="font-bold text-lg">E-Learning</span>
+                            <span className="font-bold text-lg">Admin Panel</span>
                         </div>
                     </div>
 
                     {/* Navigation */}
                     <nav className="flex-1 p-4">
                         <ul className="space-y-2">
-                            {sidebarItems.map((item) => (
+                            {adminSidebarItems.map((item) => (
                                 <li key={item.href}>
                                     <Button
                                         variant={isItemActive(item.href) ? "default" : "ghost"}
@@ -236,12 +214,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={user?.profile_image || user?.avatar} />
                                 <AvatarFallback>
-                                    {(user?.full_name || user?.name)?.charAt(0)?.toUpperCase() || 'U'}
+                                    {(user?.full_name || user?.name)?.charAt(0)?.toUpperCase() || 'A'}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium truncate">{user?.full_name || user?.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                                <p className="text-xs text-muted-foreground truncate">Quản trị viên</p>
                             </div>
                         </div>
                         <Button
@@ -271,19 +249,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             >
                                 <Menu className="h-5 w-5" />
                             </Button>
+                            <h1 className="text-lg font-semibold">Bảng điều khiển quản trị</h1>
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={refreshDashboard}
-                                disabled={loading}
-                                className="hidden sm:flex"
-                            >
-                                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                                Làm mới
-                            </Button>
                             <Button variant="ghost" size="icon">
                                 <Bell className="h-5 w-5" />
                             </Button>
@@ -294,7 +263,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage src={user?.profile_image || user?.avatar} />
                                             <AvatarFallback>
-                                                {(user?.full_name || user?.name)?.charAt(0)?.toUpperCase() || 'U'}
+                                                {(user?.full_name || user?.name)?.charAt(0)?.toUpperCase() || 'A'}
                                             </AvatarFallback>
                                         </Avatar>
                                     </Button>
@@ -304,12 +273,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                                         <div className="flex flex-col space-y-1">
                                             <p className="text-sm font-medium leading-none">{user?.full_name || user?.name}</p>
                                             <p className="text-xs leading-none text-muted-foreground">
-                                                {user?.email}
+                                                Quản trị viên hệ thống
                                             </p>
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                                    <DropdownMenuItem onClick={() => router.push('/admin/settings')}>
                                         <Settings className="mr-2 h-4 w-4" />
                                         Cài đặt
                                     </DropdownMenuItem>
@@ -323,32 +292,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </div>
                 </header>
 
-                {/* Dashboard Content */}
+                {/* Admin Dashboard Content */}
                 <main className="p-4 lg:p-6">
-                    {/* Error Alert */}
-                    {error && (
-                        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
-                            <div className="flex items-center">
-                                <AlertCircle className="h-5 w-5 text-destructive mr-2" />
-                                <div>
-                                    <h3 className="text-sm font-medium text-destructive">
-                                        Có lỗi xảy ra
-                                    </h3>
-                                    <p className="text-sm text-destructive/80 mt-1">
-                                        {error}
-                                    </p>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={refreshDashboard}
-                                    className="ml-auto text-destructive hover:text-destructive/80"
-                                >
-                                    Thử lại
-                                </Button>
-                            </div>
-                        </div>
-                    )}
                     {children}
                 </main>
             </div>
