@@ -19,7 +19,8 @@ export function ConditionalWrapper({ children }: ConditionalWrapperProps) {
     // Routes that should have fullscreen layout (no header/footer)
     const fullscreenRoutes = [
         '/dashboard',
-        '/studio'
+        '/studio',
+        '/admin'
     ]
 
     // Check if current route should be fullscreen

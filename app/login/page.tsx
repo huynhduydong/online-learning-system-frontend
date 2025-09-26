@@ -26,18 +26,37 @@ import { config } from '@/lib/config'
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuth()
+  const { login, isLoading, error, clearError, isAuthenticated, user } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
 
-  // Get return URL from search params
-  const returnUrl = searchParams.get('return') || '/dashboard'
+  // Get return URL from search params with role-based default
+  const getDefaultRedirectUrl = (user: any) => {
+    if (!user?.role) return '/dashboard'
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push(decodeURIComponent(returnUrl))
+    switch (user.role) {
+      case 'admin':
+        return '/admin'
+      case 'instructor':
+        return '/studio'
+      case 'student':
+      default:
+        return '/dashboard'
     }
-  }, [isAuthenticated, router, returnUrl])
+  }
+
+  const returnUrl = searchParams.get('return') || getDefaultRedirectUrl(null)
+
+  // Redirect if already authenticated with role-based routing
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // If no specific return URL, use role-based default
+      const targetUrl = searchParams.get('return')
+        ? decodeURIComponent(returnUrl)
+        : getDefaultRedirectUrl(user)
+
+      router.push(targetUrl)
+    }
+  }, [isAuthenticated, user, router, returnUrl, searchParams])
 
   // Form setup
   const form = useForm<LoginFormData>({
@@ -59,7 +78,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data)
-      router.push(decodeURIComponent(returnUrl))
+      // Role-based redirect will be handled by the useEffect when authentication state changes
     } catch (error) {
       // Error is handled by the auth context
       console.error('Login error:', error)
