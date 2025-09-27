@@ -75,7 +75,12 @@ export const endpoints = {
 
 // Helper function to get full API URL
 export const getApiUrl = (endpoint: string): string => {
-  return `${config.api.baseUrl}${endpoint}`
+  // Normalize baseUrl to remove trailing slash
+  const baseUrl = config.api.baseUrl.replace(/\/+$/, '')
+  // Normalize endpoint to ensure leading slash
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+
+  return `${baseUrl}${normalizedEndpoint}`
 }
 
 // Helper function to check if we're in development

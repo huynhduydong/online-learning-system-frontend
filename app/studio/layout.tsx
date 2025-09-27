@@ -3,7 +3,7 @@
 import { ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, Plus, GraduationCap, BarChart3 } from 'lucide-react'
+import { BookOpen, Plus, GraduationCap, BarChart3, Users, DollarSign, Star, Settings, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
@@ -14,6 +14,12 @@ interface StudioLayoutProps {
 }
 
 const navigationItems = [
+  {
+    title: 'Dashboard',
+    href: '/studio/dashboard',
+    icon: BarChart3,
+    description: 'Tổng quan hoạt động'
+  },
   {
     title: 'Khóa Học Của Tôi',
     href: '/studio',
@@ -27,17 +33,40 @@ const navigationItems = [
     description: 'Tạo khóa học mới'
   },
   {
-    title: 'Bảng Điều Khiển',
-    href: '/studio/admin',
-    icon: BarChart3,
-    description: 'Phân tích và thống kê'
+    title: 'Học Viên',
+    href: '/studio/students',
+    icon: Users,
+    description: 'Quản lý học viên'
+  },
+  {
+    title: 'Doanh Thu',
+    href: '/studio/earnings',
+    icon: DollarSign,
+    description: 'Thống kê thu nhập'
+  },
+  {
+    title: 'Đánh Giá',
+    href: '/studio/reviews',
+    icon: Star,
+    description: 'Phản hồi từ học viên'
+  },
+  {
+    title: 'Cài Đặt',
+    href: '/studio/settings',
+    icon: Settings,
+    description: 'Thông tin cá nhân'
   }
 ]
 
 export default function StudioLayout({ children }: StudioLayoutProps) {
   // Use regular auth hook instead of useRequireRole for development flexibility
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading, logout } = useAuth()
   const pathname = usePathname()
+
+  const handleLogout = async () => {
+    await logout()
+    window.location.href = '/login'
+  }
 
   if (isLoading) {
     return (
@@ -64,19 +93,21 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
     )
   }
 
-  // Development mode: Allow access regardless of role with warning
-  if (process.env.NODE_ENV === 'development' && user?.role !== 'instructor') {
-    console.warn(`Studio accessed by user with role: ${user?.role}. This is allowed in development mode.`)
-  }
+  // Strict role checking for all environments
+  if (user?.role !== 'instructor') {
+    // Redirect non-instructor users to appropriate dashboard
+    const redirectPath = user?.role === 'admin' ? '/admin' : '/dashboard'
 
-  // Production mode: Strict role checking
-  if (process.env.NODE_ENV === 'production' && user?.role !== 'instructor') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Truy cập bị từ chối. Cần quyền giảng viên.</p>
+          <p className="text-muted-foreground mb-4">
+            Truy cập bị từ chối. Studio Giảng viên chỉ dành cho giảng viên.
+          </p>
           <Button asChild variant="outline">
-            <Link href="/dashboard">Quay lại Bảng Điều Khiển</Link>
+            <Link href={redirectPath}>
+              Quay lại {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
+            </Link>
           </Button>
         </div>
       </div>
@@ -107,13 +138,9 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
               <span className="text-sm text-muted-foreground">
                 Chào mừng, {user?.first_name || user?.full_name}
               </span>
-              {process.env.NODE_ENV === 'development' && user?.role !== 'instructor' && (
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                  DEV: {user?.role} role
-                </span>
-              )}
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard">Thoát Studio</Link>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Đăng xuất
               </Button>
             </div>
           </div>
@@ -127,7 +154,8 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
             <ul className="space-y-2">
               {navigationItems.map((item) => {
                 const isActive = pathname === item.href ||
-                  (item.href === '/studio' && pathname === '/studio')
+                  (item.href === '/studio' && pathname === '/studio') ||
+                  (item.href === '/studio/dashboard' && pathname === '/studio/dashboard')
 
                 return (
                   <li key={item.href}>
