@@ -12,10 +12,8 @@ export const isProduction = process.env.NODE_ENV === 'production'
 export const config = {
   // API Configuration
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api',
+    baseUrl: '/api', // Always use Next.js API routes - proxy handled server-side
     timeout: 30000, // 30 seconds
-    // Use proxy in production for external HTTPS→HTTP calls
-    useProxy: isProduction && process.env.NEXT_PUBLIC_API_BASE_URL && !process.env.NEXT_PUBLIC_API_BASE_URL.includes('localhost'),
   },
 
   // Authentication Configuration
@@ -83,13 +81,6 @@ export const endpoints = {
 
 // Helper function to get full API URL
 export const getApiUrl = (endpoint: string): string => {
-  // In production with external API, use proxy through Next.js API routes
-  if (config.api.useProxy) {
-    // Use Next.js API proxy route
-    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
-    return `/api/proxy${normalizedEndpoint}`
-  }
-
   // Normalize baseUrl to remove trailing slash
   const baseUrl = config.api.baseUrl.replace(/\/+$/, '')
   // Normalize endpoint to ensure leading slash

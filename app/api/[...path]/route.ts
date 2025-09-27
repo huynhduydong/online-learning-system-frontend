@@ -1,18 +1,33 @@
 /**
- * API Proxy Route
- * Handles server-side proxying of API requests to avoid Mixed Content issues
- * This allows HTTPS frontend to communicate with HTTP backends through Next.js server
+ * API Proxy Route - Catch-all
+ * Proxies requests to external API when NEXT_PUBLIC_API_BASE_URL is set to external endpoint
+ * Falls through to existing local API routes when using localhost
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 
-// Get the backend API base URL from environment
-const BACKEND_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/api$/, '') || 'http://localhost:5000'
+// Check if we should use external API proxy
+const shouldUseProxy = () => {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+    return apiBaseUrl && !apiBaseUrl.includes('localhost') && !apiBaseUrl.includes('127.0.0.1')
+}
+
+// Get the external backend API base URL
+const getBackendUrl = () => {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+    if (apiBaseUrl?.includes('/api')) {
+        return apiBaseUrl.replace('/api', '')
+    }
+    return apiBaseUrl || 'http://103.188.82.252:5000'
+}
 
 export async function GET(
     request: NextRequest,
     { params }: { params: { path: string[] } }
 ) {
+    if (!shouldUseProxy()) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
     return handleProxyRequest(request, params.path, 'GET')
 }
 
@@ -20,6 +35,9 @@ export async function POST(
     request: NextRequest,
     { params }: { params: { path: string[] } }
 ) {
+    if (!shouldUseProxy()) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
     return handleProxyRequest(request, params.path, 'POST')
 }
 
@@ -27,6 +45,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: { path: string[] } }
 ) {
+    if (!shouldUseProxy()) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
     return handleProxyRequest(request, params.path, 'PUT')
 }
 
@@ -34,6 +55,9 @@ export async function PATCH(
     request: NextRequest,
     { params }: { params: { path: string[] } }
 ) {
+    if (!shouldUseProxy()) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
     return handleProxyRequest(request, params.path, 'PATCH')
 }
 
@@ -41,6 +65,9 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: { path: string[] } }
 ) {
+    if (!shouldUseProxy()) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
     return handleProxyRequest(request, params.path, 'DELETE')
 }
 
@@ -52,19 +79,21 @@ async function handleProxyRequest(
     try {
         // Construct the target URL
         const path = pathSegments.join('/')
-        const targetUrl = `${BACKEND_API_BASE_URL}/api/${path}`
+        const backendUrl = getBackendUrl()
+        const targetUrl = `${backendUrl}/${path}`
 
         // Get query parameters
         const searchParams = request.nextUrl.searchParams.toString()
         const finalUrl = searchParams ? `${targetUrl}?${searchParams}` : targetUrl
 
-        console.log(`🔄 Proxying ${method} request to: ${finalUrl}`)
+        console.log(`🔄 Proxying ${method} ${finalUrl}`)
 
-        // Prepare headers (exclude host and other problematic headers)
-        const headers = new Headers()
+        // Prepare headers
+        const headers: Record<string, string> = {}
         request.headers.forEach((value, key) => {
-            if (!['host', 'connection', 'content-length'].includes(key.toLowerCase())) {
-                headers.set(key, value)
+            // Skip problematic headers
+            if (!['host', 'connection', 'content-length', 'transfer-encoding'].includes(key.toLowerCase())) {
+                headers[key] = value
             }
         })
 
@@ -84,8 +113,15 @@ async function handleProxyRequest(
             } else if (contentType?.includes('multipart/form-data')) {
                 const formData = await request.formData()
                 requestOptions.body = formData
-                // Remove content-type header to let fetch set it with boundary
-                headers.delete('content-type')
+                // Remove content-type to let fetch set boundary
+                delete headers['content-type']
+            } else if (contentType?.includes('application/x-www-form-urlencoded')) {
+                const formData = await request.formData()
+                const params = new URLSearchParams()
+                Array.from(formData.entries()).forEach(([key, value]) => {
+                    params.append(key, value.toString())
+                })
+                requestOptions.body = params
             } else {
                 const body = await request.text()
                 requestOptions.body = body
@@ -96,29 +132,30 @@ async function handleProxyRequest(
         const response = await fetch(finalUrl, requestOptions)
 
         // Get response data
-        const responseData = await response.text()
+        const responseData = await response.arrayBuffer()
 
-        // Create new response with same status and headers
-        const proxyResponse = new NextResponse(responseData, {
-            status: response.status,
-            statusText: response.statusText,
-        })
+        // Create response headers
+        const responseHeaders = new Headers()
 
-        // Copy response headers (excluding problematic ones)
+        // Copy important headers
         response.headers.forEach((value, key) => {
             if (!['content-encoding', 'content-length', 'transfer-encoding'].includes(key.toLowerCase())) {
-                proxyResponse.headers.set(key, value)
+                responseHeaders.set(key, value)
             }
         })
 
-        // Add CORS headers if needed
-        proxyResponse.headers.set('Access-Control-Allow-Origin', '*')
-        proxyResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-        proxyResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        // Add CORS headers
+        responseHeaders.set('Access-Control-Allow-Origin', '*')
+        responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        responseHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
-        console.log(`✅ Proxy response: ${response.status} ${response.statusText}`)
+        console.log(`✅ Proxy response: ${response.status}`)
 
-        return proxyResponse
+        return new NextResponse(responseData, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: responseHeaders,
+        })
 
     } catch (error) {
         console.error('❌ Proxy error:', error)
@@ -136,6 +173,10 @@ async function handleProxyRequest(
 
 // Handle OPTIONS requests for CORS preflight
 export async function OPTIONS() {
+    if (!shouldUseProxy()) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
     return new NextResponse(null, {
         status: 200,
         headers: {

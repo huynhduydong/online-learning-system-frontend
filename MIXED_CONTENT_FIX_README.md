@@ -7,22 +7,23 @@ Mixed Content: The page at 'https://online-learning-system-frontend.vercel.app/'
 ```
 
 ## Solution Implemented
-Created a server-side proxy system that handles HTTPS→HTTP API calls through Next.js server:
+Created a smart catch-all proxy system using Next.js API routes:
 
 ### 1. Updated API Configuration (`lib/config.ts`)
-- Added `useProxy` flag that detects production environment with external API
-- Modified `getApiUrl()` to route through `/api/proxy/` in production
-- Preserves existing development workflow
+- Simplified to always use `/api` endpoints
+- Proxy logic handled automatically server-side
+- Zero frontend code changes required
 
-### 2. Created Proxy API Route (`app/api/proxy/[...path]/route.ts`)
+### 2. Created Smart Catch-all Route (`app/api/[...path]/route.ts`)
+- Automatically detects if external API should be used
 - Handles all HTTP methods (GET, POST, PUT, PATCH, DELETE)
 - Preserves headers, query parameters, and request bodies
-- Provides proper CORS headers
-- Includes error handling and logging
+- Falls back to local routes when using localhost
+- Includes proper CORS headers and error handling
 
 ### 3. Updated Next.js Config (`next.config.mjs`)
-- Simplified rewrites configuration
-- Proxy now handled through dedicated API route
+- Removed complex rewrites
+- Pure server-side proxy approach
 
 ## Deployment Instructions
 
@@ -42,15 +43,16 @@ NEXT_PUBLIC_API_BASE_URL=http://103.188.82.252:5000/api
 3. Redeploy your application
 
 ### How It Works
-- **Development:** Direct API calls to configured endpoint
-- **Production:** Routes through `/api/proxy/[...path]` which makes server-side HTTP requests
-- **Browser:** Only sees HTTPS requests, preventing Mixed Content errors
+- **With localhost API:** Uses existing local API routes in `app/api/`
+- **With external API:** Catch-all route proxies to `http://103.188.82.252:5000`
+- **Browser:** Always sees HTTPS `/api/` requests
+- **Zero frontend changes:** API calls remain the same
 
 ### Flow Example
-1. Frontend makes request to: `/api/proxy/courses/categories`
-2. Proxy route receives request on Next.js server
-3. Server makes HTTP request to: `http://103.188.82.252:5000/api/courses/categories`
-4. Response is returned through HTTPS to frontend
+1. Frontend makes request to: `/api/courses/categories`
+2. If external API configured: Catch-all route proxies to `http://103.188.82.252:5000/courses/categories`
+3. If localhost: Uses existing `app/api/courses/categories/route.ts`
+4. Response returned through HTTPS to frontend
 
 ### Affected Components
 - `CourseCategoriesDropdown`
