@@ -14,16 +14,8 @@ const nextConfig = {
     unoptimized: true,
   },
   async rewrites() {
-    // Only add proxy if we're using external API in development
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (process.env.NODE_ENV === 'development' && apiBaseUrl && !apiBaseUrl.includes('localhost')) {
-      return [
-        {
-          source: '/api/:path*',
-          destination: `${apiBaseUrl}/:path*`,
-        },
-      ];
-    }
+    // Note: Proxy handling is now done through /api/proxy/[...path] route
+    // This provides better control over headers and error handling
     return [];
   },
 };
