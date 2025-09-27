@@ -3,11 +3,19 @@
  * Centralized configuration for API endpoints and environment variables
  */
 
+// Helper function to check if we're in development
+export const isDevelopment = process.env.NODE_ENV === 'development'
+
+// Helper function to check if we're in production
+export const isProduction = process.env.NODE_ENV === 'production'
+
 export const config = {
   // API Configuration
   api: {
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api',
     timeout: 30000, // 30 seconds
+    // Use proxy in production for external HTTPS→HTTP calls
+    useProxy: isProduction && process.env.NEXT_PUBLIC_API_BASE_URL && !process.env.NEXT_PUBLIC_API_BASE_URL.includes('localhost'),
   },
 
   // Authentication Configuration
@@ -75,6 +83,13 @@ export const endpoints = {
 
 // Helper function to get full API URL
 export const getApiUrl = (endpoint: string): string => {
+  // In production with external API, use proxy through Next.js API routes
+  if (config.api.useProxy) {
+    // Use Next.js API proxy route
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+    return `/api/proxy${normalizedEndpoint}`
+  }
+
   // Normalize baseUrl to remove trailing slash
   const baseUrl = config.api.baseUrl.replace(/\/+$/, '')
   // Normalize endpoint to ensure leading slash
@@ -82,9 +97,3 @@ export const getApiUrl = (endpoint: string): string => {
 
   return `${baseUrl}${normalizedEndpoint}`
 }
-
-// Helper function to check if we're in development
-export const isDevelopment = process.env.NODE_ENV === 'development'
-
-// Helper function to check if we're in production
-export const isProduction = process.env.NODE_ENV === 'production'
